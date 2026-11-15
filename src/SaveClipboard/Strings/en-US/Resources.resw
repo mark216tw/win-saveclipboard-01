@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="HistoryTitle.Text" xml:space="preserve"><value>Clipboard History</value></data>
+  <data name="PinSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>Pin selected items</value></data>
+  <data name="PinSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>Pin or unpin selected items</value></data>
+  <data name="DeleteSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>Delete selected items</value></data>
+  <data name="DeleteSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>Delete selected items</value></data>
+  <data name="SettingsButton.AutomationProperties.Name" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsButton.ToolTipService.ToolTip" xml:space="preserve"><value>Settings</value></data>
+  <data name="ClosePanelButton.AutomationProperties.Name" xml:space="preserve"><value>Close</value></data>
+  <data name="ClosePanelButton.ToolTipService.ToolTip" xml:space="preserve"><value>Close (Esc)</value></data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve"><value>Search history…</value></data>
+  <data name="SearchBox.AutomationProperties.Name" xml:space="preserve"><value>Search clipboard history</value></data>
+  <data name="SearchBox.ToolTipService.ToolTip" xml:space="preserve"><value>Filter text items; press Down to enter the list and Esc to clear</value></data>
+  <data name="SearchClearButton.AutomationProperties.Name" xml:space="preserve"><value>Clear search</value></data>
+  <data name="SearchClearButton.ToolTipService.ToolTip" xml:space="preserve"><value>Clear search</value></data>
+  <data name="EntryList.AutomationProperties.Name" xml:space="preserve"><value>Clipboard history list</value></data>
+  <data name="EntryCheckBox.AutomationProperties.HelpText" xml:space="preserve"><value>Select this item</value></data>
+  <data name="PinnedBadge.AutomationProperties.Name" xml:space="preserve"><value>Pinned</value></data>
+  <data name="ClearAllButton.AutomationProperties.Name" xml:space="preserve"><value>Clear all</value></data>
+  <data name="ClearAllButton.ToolTipService.ToolTip" xml:space="preserve"><value>Clear all history, including pinned items</value></data>
+  <data name="ClearAllText.Text" xml:space="preserve"><value>Clear all</value></data>
+
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>Settings</value></data>
+  <data name="CloseSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>Close settings</value></data>
+  <data name="CloseSettingsButton.ToolTipService.ToolTip" xml:space="preserve"><value>Close without saving</value></data>
+  <data name="SettingsRecoveryTitle.Text" xml:space="preserve"><value>Settings restored to defaults</value></data>
+  <data name="AutoStartCheckBox.Content" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="DisplayModeCombo.AutomationProperties.Name" xml:space="preserve"><value>Display mode</value></data>
+  <data name="DisplayModeSystem.Content" xml:space="preserve"><value>Use system setting</value></data>
+  <data name="DisplayModeLight.Content" xml:space="preserve"><value>Light</value></data>
+  <data name="DisplayModeDark.Content" xml:space="preserve"><value>Dark</value></data>
+  <data name="ThemeColorsHint.Text" xml:space="preserve"><value>Accent color for the main panel</value></data>
+  <data name="MaxItemsHint.Text" xml:space="preserve"><value>Unpinned items only; range 10–50</value></data>
+  <data name="DecreaseMaxItemsButton.AutomationProperties.Name" xml:space="preserve"><value>Decrease limit</value></data>
+  <data name="DecreaseMaxItemsButton.ToolTipService.ToolTip" xml:space="preserve"><value>Decrease by 10</value></data>
+  <data name="MaxItemsValue.AutomationProperties.Name" xml:space="preserve"><value>Current limit</value></data>
+  <data name="IncreaseMaxItemsButton.AutomationProperties.Name" xml:space="preserve"><value>Increase limit</value></data>
+  <data name="IncreaseMaxItemsButton.ToolTipService.ToolTip" xml:space="preserve"><value>Increase by 10</value></data>
+  <data name="CloseBehaviorHint.Text" xml:space="preserve"><value>Manual mode closes only when you press the X in the top-right corner</value></data>
+  <data name="CloseBehaviorCombo.AutomationProperties.Name" xml:space="preserve"><value>Panel close behavior</value></data>
+  <data name="CloseBehaviorAuto.Content" xml:space="preserve"><value>Automatic (on focus loss or Esc)</value></data>
+  <data name="CloseBehaviorManual.Content" xml:space="preserve"><value>Manual (X only)</value></data>
+  <data name="PasteOnSelectCheckBox.Content" xml:space="preserve"><value>Paste after selecting</value></data>
+  <data name="PasteOnSelectCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Paste after selecting</value></data>
+  <data name="PasteOnSelectHint.Text" xml:space="preserve"><value>After clicking an item or pressing Enter, SaveClipboard returns to the previous window and pastes. Shell and desktop windows are skipped.</value></data>
+  <data name="ShortcutTitle.Text" xml:space="preserve"><value>Global shortcut</value></data>
+  <data name="AboutTitle.Text" xml:space="preserve"><value>About</value></data>
+  <data name="AboutDescription.Text" xml:space="preserve"><value>A Windows clipboard history tray tool. History is kept in memory by default; you can opt in to DPAPI-encrypted local storage in Settings.</value></data>
+  <data name="AboutLicense.Text" xml:space="preserve"><value>License: MIT License</value></data>
+  <data name="SettingsCloseButton.Content" xml:space="preserve"><value>Close</value></data>
+  <data name="SettingsSaveButton.Content" xml:space="preserve"><value>Save</value></data>
+  <data name="AlwaysOnTopCheckBox.Content" xml:space="preserve"><value>Keep panel on top</value></data>
+  <data name="AlwaysOnTopHint.Text" xml:space="preserve"><value>Keep the panel above other windows while it is shown</value></data>
+  <data name="ResetSettingsButton.Content" xml:space="preserve"><value>Reset to defaults</value></data>
+  <data name="OpenLogFolderButton.Content" xml:space="preserve"><value>Open log folder</value></data>
+  <data name="SettingsOpenLogFailed" xml:space="preserve"><value>Unable to open the log folder.</value></data>
+  <data name="PersistHistoryTitle.Text" xml:space="preserve"><value>History storage</value></data>
+  <data name="PersistHistoryCheckBox.Content" xml:space="preserve"><value>Save history on this PC (encrypted)</value></data>
+  <data name="PersistHistoryHint.Text" xml:space="preserve"><value>Encrypted with Windows DPAPI for the current user only. Off by default.</value></data>
+  <data name="UndoButton.Content" xml:space="preserve"><value>Undo</value></data>
+
+  <data name="App_DisplayName" xml:space="preserve"><value>SaveClipboard</value></data>
+  <data name="Version_Format" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="FileVersion_Format" xml:space="preserve"><value>File version {0}</value></data>
+  <data name="Shortcut_Available" xml:space="preserve"><value>Available globally</value></data>
+  <data name="Shortcut_Unavailable" xml:space="preserve"><value>In use by another app; the shortcut is temporarily unavailable</value></data>
+  <data name="SettingsRecovery_Notice" xml:space="preserve"><value>Settings could not be read and were restored to defaults.</value></data>
+  <data name="SettingsRecovery_NoticeWithBackup" xml:space="preserve"><value>Settings could not be read and were restored to defaults. The original file was backed up as {0}.</value></data>
+  <data name="SettingsSave_AutoStartFailed" xml:space="preserve"><value>Unable to update the start-with-Windows setting.</value></data>
+  <data name="SettingsSave_FileFailed" xml:space="preserve"><value>Unable to write the settings file. Check disk space and folder permissions.</value></data>
+  <data name="Pause_ActionPause" xml:space="preserve"><value>Pause for 30 minutes</value></data>
+  <data name="Pause_ActionResume" xml:space="preserve"><value>Resume recording</value></data>
+  <data name="Pause_Footer" xml:space="preserve"><value>Recording paused</value></data>
+  <data name="Pause_FooterFormat" xml:space="preserve"><value>Recording paused (resumes in about {0} min)</value></data>
+  <data name="Footer_PasteOnSelectSuffix" xml:space="preserve"><value>Paste on select</value></data>
+  <data name="Empty_NoHistoryTitle" xml:space="preserve"><value>No clipboard history yet</value></data>
+  <data name="Empty_NoHistoryDescription" xml:space="preserve"><value>Copy any text or image and it will appear here</value></data>
+  <data name="Empty_NoMatchTitle" xml:space="preserve"><value>No matching items</value></data>
+  <data name="Empty_NoMatchDescription" xml:space="preserve"><value>Try another keyword or press Esc to clear the search</value></data>
+  <data name="Copy_Text" xml:space="preserve"><value>Text copied</value></data>
+  <data name="Copy_Image" xml:space="preserve"><value>Image copied</value></data>
+  <data name="Copy_Busy" xml:space="preserve"><value>The clipboard is busy. Try again.</value></data>
+  <data name="Copy_Failed" xml:space="preserve"><value>Copy failed. Try again.</value></data>
+  <data name="Paste_FailedForeground" xml:space="preserve"><value>Copied, but could not paste automatically (could not return to the previous window).</value></data>
+  <data name="Paste_FailedInput" xml:space="preserve"><value>Copied, but could not paste automatically (target window has higher privileges or rejected input).</value></data>
+  <data name="Tray_ToolTipNormal" xml:space="preserve"><value>SaveClipboard - Clipboard history</value></data>
+  <data name="Tray_ToolTipPaused" xml:space="preserve"><value>SaveClipboard - Recording paused</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>Open clipboard history</value></data>
+  <data name="Tray_Pause" xml:space="preserve"><value>Pause recording for 30 minutes</value></data>
+  <data name="Tray_Resume" xml:space="preserve"><value>Resume recording</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Dialog_DeleteOneTitle" xml:space="preserve"><value>Delete this item?</value></data>
+  <data name="Dialog_DeleteOneMessage" xml:space="preserve"><value>This clipboard item will be deleted. This cannot be undone.</value></data>
+  <data name="Dialog_DeleteManyTitleFormat" xml:space="preserve"><value>Delete {0} items?</value></data>
+  <data name="Dialog_DeleteManyMessage" xml:space="preserve"><value>The selected clipboard items will be deleted. This cannot be undone.</value></data>
+  <data name="Dialog_DeleteButton" xml:space="preserve"><value>Delete</value></data>
+  <data name="Dialog_ClearAllTitle" xml:space="preserve"><value>Clear all history?</value></data>
+  <data name="Dialog_ClearAllMessage" xml:space="preserve"><value>All saved clipboard items, including pinned items, will be deleted. This cannot be undone.</value></data>
+  <data name="Dialog_ClearAllButton" xml:space="preserve"><value>Clear all</value></data>
+  <data name="Dialog_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Welcome_Title" xml:space="preserve"><value>Welcome to SaveClipboard</value></data>
+  <data name="Welcome_Message" xml:space="preserve"><value>Press Ctrl+Alt+V or click the tray icon to open the panel. Select an item to copy it; by default it is also pasted into the previous window.</value></data>
+  <data name="Welcome_Start" xml:space="preserve"><value>Get started</value></data>
+  <data name="Storage_SummaryFormat" xml:space="preserve"><value>{0} items · Images {1}</value></data>
+  <data name="Storage_NoItems" xml:space="preserve"><value>0 items</value></data>
+  <data name="Storage_Kilobytes" xml:space="preserve"><value>{0:0.0} KB</value></data>
+  <data name="Storage_Megabytes" xml:space="preserve"><value>{0:0.0} MB</value></data>
+  <data name="Undo_DeletedFormat" xml:space="preserve"><value>Deleted {0} items</value></data>
+  <data name="Persist_LoadFailed" xml:space="preserve"><value>Encrypted history could not be read; starting with an empty history.</value></data>
+  <data name="Preview_Image" xml:space="preserve"><value>[Image]</value></data>
+  <data name="Theme_classic-blue" xml:space="preserve"><value>Classic blue</value></data>
+  <data name="Theme_forest-green" xml:space="preserve"><value>Forest green</value></data>
+  <data name="Theme_dusk-purple" xml:space="preserve"><value>Dusk purple</value></data>
+  <data name="Theme_sunset-orange" xml:space="preserve"><value>Sunset orange</value></data>
+  <data name="Theme_rose-red" xml:space="preserve"><value>Rose red</value></data>
+  <data name="Theme_teal" xml:space="preserve"><value>Lake teal</value></data>
+  <data name="Theme_gold" xml:space="preserve"><value>Gold</value></data>
+  <data name="Theme_graphite" xml:space="preserve"><value>Graphite</value></data>
+  <data name="Theme_indigo" xml:space="preserve"><value>Indigo</value></data>
+  <data name="Theme_coral" xml:space="preserve"><value>Coral red</value></data></root>

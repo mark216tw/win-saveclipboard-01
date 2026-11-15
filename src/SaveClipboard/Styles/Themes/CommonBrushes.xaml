@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 預設值；ThemeService 會依顯示模式與主題即時調整這些共用筆刷。 -->
+    <SolidColorBrush x:Key="DividerBrush" Color="#38000000" />
+    <SolidColorBrush x:Key="SubtleFillBrush" Color="#1F808080" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF2F4B7C" />
+    <SolidColorBrush x:Key="AccentSubtleBrush" Color="#1F2F4B7C" />
+    <SolidColorBrush x:Key="ToastBackgroundBrush" Color="#F2FFFFFF" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#FFC42B1C" />
+    <SolidColorBrush x:Key="TitleBarBrush" Color="#262F4B7C" />
+
+</ResourceDictionary>

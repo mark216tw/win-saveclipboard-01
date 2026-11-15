@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="HistoryTitle.Text" xml:space="preserve"><value>剪貼簿歷史</value></data>
+  <data name="PinSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>釘選選取項目</value></data>
+  <data name="PinSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>釘選／取消釘選選取項目</value></data>
+  <data name="DeleteSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>刪除選取項目</value></data>
+  <data name="DeleteSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>刪除選取項目</value></data>
+  <data name="SettingsButton.AutomationProperties.Name" xml:space="preserve"><value>設定</value></data>
+  <data name="SettingsButton.ToolTipService.ToolTip" xml:space="preserve"><value>設定</value></data>
+  <data name="ClosePanelButton.AutomationProperties.Name" xml:space="preserve"><value>關閉</value></data>
+  <data name="ClosePanelButton.ToolTipService.ToolTip" xml:space="preserve"><value>關閉（Esc）</value></data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve"><value>搜尋歷史…</value></data>
+  <data name="SearchBox.AutomationProperties.Name" xml:space="preserve"><value>搜尋剪貼簿歷史</value></data>
+  <data name="SearchBox.ToolTipService.ToolTip" xml:space="preserve"><value>輸入關鍵字過濾文字項目，按 ↓ 進入清單，Esc 清除</value></data>
+  <data name="SearchClearButton.AutomationProperties.Name" xml:space="preserve"><value>清除搜尋</value></data>
+  <data name="SearchClearButton.ToolTipService.ToolTip" xml:space="preserve"><value>清除搜尋</value></data>
+  <data name="EntryList.AutomationProperties.Name" xml:space="preserve"><value>剪貼簿歷史清單</value></data>
+  <data name="EntryCheckBox.AutomationProperties.HelpText" xml:space="preserve"><value>選取此項目</value></data>
+  <data name="PinnedBadge.AutomationProperties.Name" xml:space="preserve"><value>已釘選</value></data>
+  <data name="ClearAllButton.AutomationProperties.Name" xml:space="preserve"><value>清除全部</value></data>
+  <data name="ClearAllButton.ToolTipService.ToolTip" xml:space="preserve"><value>清除所有歷史（含釘選）</value></data>
+  <data name="ClearAllText.Text" xml:space="preserve"><value>清除全部</value></data>
+
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>設定</value></data>
+  <data name="CloseSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>關閉設定</value></data>
+  <data name="CloseSettingsButton.ToolTipService.ToolTip" xml:space="preserve"><value>關閉（不儲存）</value></data>
+  <data name="SettingsRecoveryTitle.Text" xml:space="preserve"><value>設定檔已還原為預設值</value></data>
+  <data name="AutoStartCheckBox.Content" xml:space="preserve"><value>開機自動啟動</value></data>
+  <data name="DisplayModeCombo.AutomationProperties.Name" xml:space="preserve"><value>顯示模式</value></data>
+  <data name="DisplayModeSystem.Content" xml:space="preserve"><value>跟隨系統</value></data>
+  <data name="DisplayModeLight.Content" xml:space="preserve"><value>淺色</value></data>
+  <data name="DisplayModeDark.Content" xml:space="preserve"><value>深色</value></data>
+  <data name="ThemeColorsHint.Text" xml:space="preserve"><value>套用於主頁面的強調色</value></data>
+  <data name="MaxItemsHint.Text" xml:space="preserve"><value>只計算未釘選項目，範圍 10–50</value></data>
+  <data name="DecreaseMaxItemsButton.AutomationProperties.Name" xml:space="preserve"><value>減少上限</value></data>
+  <data name="DecreaseMaxItemsButton.ToolTipService.ToolTip" xml:space="preserve"><value>減少 10</value></data>
+  <data name="MaxItemsValue.AutomationProperties.Name" xml:space="preserve"><value>目前上限</value></data>
+  <data name="IncreaseMaxItemsButton.AutomationProperties.Name" xml:space="preserve"><value>增加上限</value></data>
+  <data name="IncreaseMaxItemsButton.ToolTipService.ToolTip" xml:space="preserve"><value>增加 10</value></data>
+  <data name="CloseBehaviorHint.Text" xml:space="preserve"><value>選手動時，需按主頁面右上角的 X 才會關閉</value></data>
+  <data name="CloseBehaviorCombo.AutomationProperties.Name" xml:space="preserve"><value>主視窗關閉方式</value></data>
+  <data name="CloseBehaviorAuto.Content" xml:space="preserve"><value>自動（失焦或 Esc 關閉）</value></data>
+  <data name="CloseBehaviorManual.Content" xml:space="preserve"><value>手動（僅按 X 關閉）</value></data>
+  <data name="PasteOnSelectCheckBox.Content" xml:space="preserve"><value>選取後直接貼上</value></data>
+  <data name="PasteOnSelectCheckBox.AutomationProperties.Name" xml:space="preserve"><value>選取後直接貼上</value></data>
+  <data name="PasteOnSelectHint.Text" xml:space="preserve"><value>從清單點選或按 Enter 後，會自動切回前一個視窗並貼上。系統匣、桌面等無法貼上的視窗會略過。</value></data>
+  <data name="ShortcutTitle.Text" xml:space="preserve"><value>全域快捷鍵</value></data>
+  <data name="AboutTitle.Text" xml:space="preserve"><value>關於</value></data>
+  <data name="AboutDescription.Text" xml:space="preserve"><value>Windows 剪貼簿歷史常駐工具。剪貼簿內容預設只保存在記憶體；可在設定中選擇以 DPAPI 加密保存到本機。</value></data>
+  <data name="AboutLicense.Text" xml:space="preserve"><value>授權：MIT License</value></data>
+  <data name="SettingsCloseButton.Content" xml:space="preserve"><value>關閉</value></data>
+  <data name="SettingsSaveButton.Content" xml:space="preserve"><value>儲存</value></data>
+  <data name="AlwaysOnTopCheckBox.Content" xml:space="preserve"><value>面板置頂</value></data>
+  <data name="AlwaysOnTopHint.Text" xml:space="preserve"><value>面板顯示時保持在其他視窗上方</value></data>
+  <data name="ResetSettingsButton.Content" xml:space="preserve"><value>重設為預設值</value></data>
+  <data name="OpenLogFolderButton.Content" xml:space="preserve"><value>開啟日誌資料夾</value></data>
+  <data name="SettingsOpenLogFailed" xml:space="preserve"><value>無法開啟日誌資料夾。</value></data>
+  <data name="PersistHistoryTitle.Text" xml:space="preserve"><value>歷史保存</value></data>
+  <data name="PersistHistoryCheckBox.Content" xml:space="preserve"><value>保存歷史到本機（加密）</value></data>
+  <data name="PersistHistoryHint.Text" xml:space="preserve"><value>使用 Windows DPAPI 加密，僅供目前使用者讀取；預設關閉。</value></data>
+  <data name="UndoButton.Content" xml:space="preserve"><value>復原</value></data>
+
+  <data name="App_DisplayName" xml:space="preserve"><value>SaveClipboard</value></data>
+  <data name="Version_Format" xml:space="preserve"><value>版本 {0}</value></data>
+  <data name="FileVersion_Format" xml:space="preserve"><value>檔案版本 {0}</value></data>
+  <data name="Shortcut_Available" xml:space="preserve"><value>全域可用</value></data>
+  <data name="Shortcut_Unavailable" xml:space="preserve"><value>已被其他程式占用，快捷鍵暫時無法使用</value></data>
+  <data name="SettingsRecovery_Notice" xml:space="preserve"><value>設定檔無法讀取，已還原為預設值。</value></data>
+  <data name="SettingsRecovery_NoticeWithBackup" xml:space="preserve"><value>設定檔無法讀取，已還原為預設值。原檔已備份為 {0}。</value></data>
+  <data name="SettingsSave_AutoStartFailed" xml:space="preserve"><value>無法更新開機自動啟動設定。</value></data>
+  <data name="SettingsSave_FileFailed" xml:space="preserve"><value>設定檔無法寫入，請確認磁碟空間與資料夾權限。</value></data>
+  <data name="Pause_ActionPause" xml:space="preserve"><value>暫停 30 分鐘</value></data>
+  <data name="Pause_ActionResume" xml:space="preserve"><value>恢復記錄</value></data>
+  <data name="Pause_Footer" xml:space="preserve"><value>已暫停記錄</value></data>
+  <data name="Pause_FooterFormat" xml:space="preserve"><value>已暫停記錄（約 {0} 分鐘後恢復）</value></data>
+  <data name="Footer_PasteOnSelectSuffix" xml:space="preserve"><value>選取即貼上</value></data>
+  <data name="Empty_NoHistoryTitle" xml:space="preserve"><value>尚無剪貼簿歷史</value></data>
+  <data name="Empty_NoHistoryDescription" xml:space="preserve"><value>複製任何文字或圖片，這裡就會出現</value></data>
+  <data name="Empty_NoMatchTitle" xml:space="preserve"><value>找不到符合的項目</value></data>
+  <data name="Empty_NoMatchDescription" xml:space="preserve"><value>換個關鍵字試試，或按 Esc 清除搜尋</value></data>
+  <data name="Copy_Text" xml:space="preserve"><value>已複製文字</value></data>
+  <data name="Copy_Image" xml:space="preserve"><value>已複製圖片</value></data>
+  <data name="Copy_Busy" xml:space="preserve"><value>剪貼簿忙碌，請再試一次</value></data>
+  <data name="Copy_Failed" xml:space="preserve"><value>複製失敗，請再試一次</value></data>
+  <data name="Paste_FailedForeground" xml:space="preserve"><value>已複製，但無法自動貼上（未能切回前一個視窗）。</value></data>
+  <data name="Paste_FailedInput" xml:space="preserve"><value>已複製，但無法自動貼上（目標視窗權限較高或拒絕輸入）。</value></data>
+  <data name="Tray_ToolTipNormal" xml:space="preserve"><value>SaveClipboard - 剪貼簿歷史</value></data>
+  <data name="Tray_ToolTipPaused" xml:space="preserve"><value>SaveClipboard - 記錄已暫停</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>開啟剪貼簿歷史</value></data>
+  <data name="Tray_Pause" xml:space="preserve"><value>暫停記錄 30 分鐘</value></data>
+  <data name="Tray_Resume" xml:space="preserve"><value>恢復記錄</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>結束</value></data>
+  <data name="Dialog_DeleteOneTitle" xml:space="preserve"><value>刪除這個項目？</value></data>
+  <data name="Dialog_DeleteOneMessage" xml:space="preserve"><value>此剪貼簿項目將被刪除，此動作無法復原。</value></data>
+  <data name="Dialog_DeleteManyTitleFormat" xml:space="preserve"><value>刪除 {0} 個項目？</value></data>
+  <data name="Dialog_DeleteManyMessage" xml:space="preserve"><value>選取的剪貼簿項目將被刪除，此動作無法復原。</value></data>
+  <data name="Dialog_DeleteButton" xml:space="preserve"><value>刪除</value></data>
+  <data name="Dialog_ClearAllTitle" xml:space="preserve"><value>清除全部歷史？</value></data>
+  <data name="Dialog_ClearAllMessage" xml:space="preserve"><value>將刪除所有已保存的剪貼簿項目（含釘選項目），此動作無法復原。</value></data>
+  <data name="Dialog_ClearAllButton" xml:space="preserve"><value>清除全部</value></data>
+  <data name="Dialog_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Welcome_Title" xml:space="preserve"><value>歡迎使用 SaveClipboard</value></data>
+  <data name="Welcome_Message" xml:space="preserve"><value>按 Ctrl+Alt+V 或點擊系統列圖示開啟面板；點選項目即可複製，預設會自動貼回前一個視窗。</value></data>
+  <data name="Welcome_Start" xml:space="preserve"><value>開始使用</value></data>
+  <data name="Storage_SummaryFormat" xml:space="preserve"><value>{0} 項 · 圖片 {1}</value></data>
+  <data name="Storage_NoItems" xml:space="preserve"><value>0 項</value></data>
+  <data name="Storage_Kilobytes" xml:space="preserve"><value>{0:0.0} KB</value></data>
+  <data name="Storage_Megabytes" xml:space="preserve"><value>{0:0.0} MB</value></data>
+  <data name="Undo_DeletedFormat" xml:space="preserve"><value>已刪除 {0} 個項目</value></data>
+  <data name="Persist_LoadFailed" xml:space="preserve"><value>加密歷史無法讀取，已改用空白歷史。</value></data>
+  <data name="Preview_Image" xml:space="preserve"><value>[圖片]</value></data>
+  <data name="Theme_classic-blue" xml:space="preserve"><value>經典藍</value></data>
+  <data name="Theme_forest-green" xml:space="preserve"><value>森林綠</value></data>
+  <data name="Theme_dusk-purple" xml:space="preserve"><value>暮色紫</value></data>
+  <data name="Theme_sunset-orange" xml:space="preserve"><value>暖陽橙</value></data>
+  <data name="Theme_rose-red" xml:space="preserve"><value>玫瑰紅</value></data>
+  <data name="Theme_teal" xml:space="preserve"><value>湖水青</value></data>
+  <data name="Theme_gold" xml:space="preserve"><value>金黃</value></data>
+  <data name="Theme_graphite" xml:space="preserve"><value>石墨灰</value></data>
+  <data name="Theme_indigo" xml:space="preserve"><value>靛青</value></data>
+  <data name="Theme_coral" xml:space="preserve"><value>珊瑚紅</value></data></root>
