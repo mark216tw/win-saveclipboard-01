@@ -14,21 +14,24 @@ public class ClipboardChangeGateTests
     }
 
     [Fact]
-    public void 符合序號時只消費一次()
+    public void 範圍內序號可重複消費()
     {
         var gate = new ClipboardChangeGate();
-        gate.ExpectOwnChange(42);
+        gate.ExpectOwnChange(40, 42);
 
+        Assert.True(gate.TryConsume(40));
+        Assert.True(gate.TryConsume(41));
         Assert.True(gate.TryConsume(42));
-        Assert.False(gate.TryConsume(42));
+        Assert.True(gate.TryConsume(42));
     }
 
     [Fact]
-    public void 不同序號時不消費()
+    public void 範圍外序號不消費()
     {
         var gate = new ClipboardChangeGate();
-        gate.ExpectOwnChange(42);
+        gate.ExpectOwnChange(40, 42);
 
+        Assert.False(gate.TryConsume(39));
         Assert.False(gate.TryConsume(43));
     }
 
@@ -37,7 +40,9 @@ public class ClipboardChangeGateTests
     {
         var gate = new ClipboardChangeGate();
         gate.ExpectOwnChange(0);
+        Assert.False(gate.TryConsume(0));
 
+        gate.ExpectOwnChange(40, 42);
         Assert.False(gate.TryConsume(0));
     }
 
@@ -45,20 +50,21 @@ public class ClipboardChangeGateTests
     public void 連續設定以最後一次為準()
     {
         var gate = new ClipboardChangeGate();
-        gate.ExpectOwnChange(42);
-        gate.ExpectOwnChange(43);
+        gate.ExpectOwnChange(40, 42);
+        gate.ExpectOwnChange(50, 52);
 
-        Assert.False(gate.TryConsume(42));
-        Assert.True(gate.TryConsume(43));
+        Assert.False(gate.TryConsume(41));
+        Assert.True(gate.TryConsume(51));
     }
 
     [Fact]
     public void Clear_取消期待值()
     {
         var gate = new ClipboardChangeGate();
-        gate.ExpectOwnChange(42);
+        gate.ExpectOwnChange(40, 42);
         gate.Clear();
 
+        Assert.False(gate.TryConsume(40));
         Assert.False(gate.TryConsume(42));
     }
 }

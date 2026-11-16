@@ -21,36 +21,23 @@ public sealed partial class HistoryPanelWindow : Window
     private const int MinPanelWidthDip = 320;
     private const int MinPanelHeightDip = 400;
     private const int ShowForegroundProtectionMs = 2000;
-    private const int MinimumFocusBeforeAutoHideMs = 500;
     private const int ForegroundReassertDelayMs = 120;
-    private const int PasteTargetActivationDelayMs = 140;
-    private const int PasteTargetSettleDelayMs = 90;
     private const int PauseRefreshIntervalSeconds = 30;
 
     private readonly ILogger<HistoryPanelWindow> _logger;
-    private readonly CancellationToken _lifetimeToken;
-    private readonly Action<string>? _showNotification;
     private readonly WindowPlacementService _placement;
-    private readonly PasteAutomationService _paste;
     private readonly DialogService _dialog;
-    private readonly KeyboardNavigationService _keyboard;
     private bool _isDraggingHeader;
     private uint _dragPointerId;
     private Windows.Foundation.Point _dragStartScreen;
     private Windows.Graphics.PointInt32 _dragStartWindow;
     private bool _allowHide = true;
     private bool _settingsOpen;
-    private bool _everActivated;
     private bool _enforcingMinimumSize;
     private bool _suppressSearchChange;
     private bool _isExiting;
     private bool _welcomeShown;
-    private bool _pasteInProgress;
-    private int _selectionAnchor = -1;
-    private DateTimeOffset _lastActivationAt;
     private DateTimeOffset _lastShowRequestAt;
-    private DateTimeOffset _suppressDeactivationUntil;
-    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _hideTimer;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _toastTimer;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _foregroundTimer;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _pauseRefreshTimer;
@@ -60,41 +47,16 @@ public sealed partial class HistoryPanelWindow : Window
     public HistoryPanelWindow(
         HistoryPanelViewModel viewModel,
         ThemeService themeService,
-        CancellationToken lifetimeToken,
-        Action<string>? showNotification,
-        ForegroundWindowTracker foregroundTracker,
         Func<Windows.Graphics.RectInt32?> getTrayRect,
         ILogger<WindowPlacementService> placementLogger,
         ILogger<HistoryPanelWindow> logger)
     {
         ViewModel = viewModel;
         _logger = logger;
-        _lifetimeToken = lifetimeToken;
-        _showNotification = showNotification;
-        _paste = new PasteAutomationService(
-            () => WindowNative.GetWindowHandle(this),
-            foregroundTracker,
-            () => ViewModel?.PasteOnSelect ?? false,
-            () => PanelVisibilityRules.KeepVisibleDuringPaste(ViewModel.AlwaysOnTop, ViewModel.PasteOnSelect),
-            () => _isExiting,
-            HidePanel,
-            showNotification,
-            lifetimeToken,
-            logger);
         InitializeComponent();
         RootGrid.DataContext = viewModel;
         Title = WindowTitle;
         _dialog = new DialogService(RootGrid, value => _allowHide = value, logger);
-        _keyboard = new KeyboardNavigationService(
-            viewModel,
-            EntryList,
-            SearchBox,
-            RootGrid,
-            () => _settingsOpen || !_allowHide,
-            () => _settingsOpen,
-            ResetSearch,
-            HidePanel,
-            DeleteFromKeyboardAsync);
 
         ConfigurePresenter();
         ConfigureIcon();
@@ -107,7 +69,6 @@ public sealed partial class HistoryPanelWindow : Window
 
         ViewModel.CloseRequested += HidePanel;
         ViewModel.CopyCompleted += OnCopyCompleted;
-        ViewModel.ItemCopied += OnItemCopied;
         ViewModel.Settings.EditCompleted += OnSettingsEditCompleted;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         AppWindow.Changed += OnAppWindowChanged;
@@ -130,17 +91,11 @@ public sealed partial class HistoryPanelWindow : Window
 
         if (!wasVisible)
         {
-            // 只在面板由隱藏轉為顯示時記錄，避免焦點回到自己時覆蓋真正的貼上目標
-            _paste.CaptureTarget();
             ResetSearch();
             _placement.Apply(ViewModel.HasStoredPanelBounds, ViewModel.StoredPanelBounds, ViewModel.StoredPanelDpi);
         }
 
         _lastShowRequestAt = now;
-        _suppressDeactivationUntil = now.AddMilliseconds(ShowForegroundProtectionMs);
-        _everActivated = false;
-        _lastActivationAt = default;
-        _hideTimer?.Stop();
 
         AppWindow.Show();
         ForceForegroundWindow(hwnd);
@@ -195,7 +150,6 @@ public sealed partial class HistoryPanelWindow : Window
     public void StartHidden()
     {
         _lastShowRequestAt = DateTimeOffset.UtcNow;
-        _suppressDeactivationUntil = _lastShowRequestAt.AddMilliseconds(ShowForegroundProtectionMs);
         Activate();
         AppWindow.Hide();
         _logger.LogInformation("開機啟動，面板保持隱藏");
@@ -212,10 +166,8 @@ public sealed partial class HistoryPanelWindow : Window
 
         HideCopyToast();
         HideUndoToast();
-        _hideTimer?.Stop();
         _foregroundTimer?.Stop();
-        _everActivated = false;
-        _lastActivationAt = default;
+
         AppWindow.Hide();
         _logger.LogInformation("隱藏面板");
     }
@@ -398,15 +350,7 @@ public sealed partial class HistoryPanelWindow : Window
             presenter.IsResizable = true;
             presenter.IsMaximizable = false;
             presenter.IsMinimizable = false;
-            presenter.IsAlwaysOnTop = ViewModel.AlwaysOnTop;
-        }
-    }
-
-    private void ApplyWindowPreferences()
-    {
-        if (AppWindow.Presenter is OverlappedPresenter presenter)
-        {
-            presenter.IsAlwaysOnTop = ViewModel.AlwaysOnTop;
+            presenter.IsAlwaysOnTop = true;
         }
     }
 
@@ -507,26 +451,6 @@ public sealed partial class HistoryPanelWindow : Window
         }
     }
 
-    private async void OnItemCopied(ClipboardEntry entry)
-    {
-        _pasteInProgress = true;
-        try
-        {
-            await _paste.PasteAsync(entry);
-        }
-        catch (OperationCanceledException)
-        {
-            // 程式結束或面板關閉時取消貼上流程
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "自動貼上流程失敗。");
-        }
-        finally
-        {
-            _pasteInProgress = false;
-        }
-    }
     private static void ForceForegroundWindow(IntPtr hwnd)
     {
         IntPtr foreground = NativeMethods.GetForegroundWindow();
@@ -558,66 +482,22 @@ public sealed partial class HistoryPanelWindow : Window
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-
         if (args.WindowActivationState == WindowActivationState.Deactivated)
         {
-            // 面板失焦時，新的前景視窗就是使用者的下一個貼上目標（例如用 Alt+Tab 切到其他程式）
-            _paste.UpdateTargetFromForeground();
-
-            if (_settingsOpen
-                || !_allowHide
-                || !_everActivated
-                || !ViewModel.AutoHideEnabled
-                || _pasteInProgress
-                || now < _suppressDeactivationUntil
-                || now - _lastActivationAt < TimeSpan.FromMilliseconds(MinimumFocusBeforeAutoHideMs))
-            {
-                // 前景交接（第二實例結束、殼層還原視窗）造成的短暫失焦不關閉面板
-                _logger.LogInformation(
-                    "忽略失焦（保護中={Protected}, 取得前景={HasFocus}）",
-                    now < _suppressDeactivationUntil,
-                    _everActivated);
-                return;
-            }
-
-            // 延遲隱藏：避免刪除項目等短暫焦點切換誤觸關閉
-            _hideTimer ??= DispatcherQueue.CreateTimer();
-            _hideTimer.Interval = TimeSpan.FromMilliseconds(220);
-            _hideTimer.Tick -= OnHideTimerTick;
-            _hideTimer.Tick += OnHideTimerTick;
-            _hideTimer.Stop();
-            _hideTimer.Start();
-            _logger.LogInformation("面板失焦，排程隱藏");
+            return;
         }
-        else
-        {
-            _everActivated = true;
-            _lastActivationAt = now;
-            _hideTimer?.Stop();
 
-            // 非本程式請求的啟用（例如工作列釘選圖示還原視窗）視為顯示請求。
-            // 必須完整走一次顯示流程，只重設前景保護無法讓隱藏中的面板出現。
-            // 面板已可見時只是一般取得焦點（例如使用者點回面板），不可再重跑顯示流程，
-            // 否則會不斷重設 _everActivated 並反覆搶焦點。
-            if (!AppWindow.IsVisible
-                && now - _lastShowRequestAt > TimeSpan.FromMilliseconds(ShowForegroundProtectionMs))
-            {
-                _lastShowRequestAt = now;
-                _suppressDeactivationUntil = now.AddMilliseconds(ShowForegroundProtectionMs);
-                _logger.LogInformation("外部啟用面板，改為顯示請求");
-                DispatcherQueue.TryEnqueue(ShowNearTray);
-            }
-        }
-    }
+        DateTimeOffset now = DateTimeOffset.UtcNow;
 
-    private void OnHideTimerTick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args)
-    {
-        sender.Stop();
-        if (_allowHide && !_settingsOpen && !_pasteInProgress && ViewModel.AutoHideEnabled)
+        // 非本程式請求的啟用（例如工作列釘選圖示還原視窗）視為顯示請求。
+        // 必須完整走一次顯示流程，只重設前景保護無法讓隱藏中的面板出現。
+        // 面板已可見時只是一般取得焦點（例如使用者點回面板），不可再重跑顯示流程。
+        if (!AppWindow.IsVisible
+            && now - _lastShowRequestAt > TimeSpan.FromMilliseconds(ShowForegroundProtectionMs))
         {
-            _logger.LogInformation("面板失焦後自動隱藏");
-            HidePanel();
+            _lastShowRequestAt = now;
+            _logger.LogInformation("外部啟用面板，改為顯示請求");
+            DispatcherQueue.TryEnqueue(ShowNearTray);
         }
     }
 
@@ -724,42 +604,33 @@ public sealed partial class HistoryPanelWindow : Window
         SearchBox.Focus(FocusState.Programmatic);
     }
 
-    private async void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e)
+    private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        try
-        {
-            await _keyboard.HandleKeyDownAsync(e);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "處理面板鍵盤事件失敗。");
-        }
-    }
-
-    private async Task DeleteFromKeyboardAsync()
-    {
-        if (ViewModel.Items.Any(static item => item.IsSelected))
-        {
-            await DeleteSelectedAsync();
-            return;
-        }
-
-        ClipboardEntry? focused = _keyboard.GetFocusedEntry();
-        if (focused is null)
+        if (e.Key != Windows.System.VirtualKey.Escape)
         {
             return;
         }
 
-        if (!await ConfirmAsync(AppStrings.Get("Dialog_DeleteOneTitle"), AppStrings.Get("Dialog_DeleteOneMessage"), AppStrings.Get("Dialog_DeleteButton")))
+        bool inputBlocked = _settingsOpen || !_allowHide;
+        if (!inputBlocked && !string.IsNullOrEmpty(SearchBox.Text))
         {
+            // 有搜尋條件時，第一次 Esc 先清除搜尋，再按一次才關閉面板
+            ResetSearch();
+            SearchBox.Focus(FocusState.Programmatic);
+            e.Handled = true;
             return;
         }
 
-        DeletedClipboardEntry? deleted = ViewModel.DeleteEntry(focused);
-        if (deleted is not null)
+        if (_settingsOpen)
         {
-            ShowUndoToast([deleted.Value]);
+            ViewModel.Settings.CloseCommand.Execute(null);
         }
+        else if (!inputBlocked)
+        {
+            HidePanel();
+        }
+
+        e.Handled = true;
     }
 
     private async void EntryContent_Tapped(object sender, TappedRoutedEventArgs e)
@@ -768,25 +639,6 @@ public sealed partial class HistoryPanelWindow : Window
         {
             if (sender is FrameworkElement { DataContext: ClipboardEntry entry })
             {
-                int index = ViewModel.VisibleItems.IndexOf(entry);
-                if (KeyboardNavigationService.IsShiftDown())
-                {
-                    if (_selectionAnchor >= 0)
-                    {
-                        SelectRange(_selectionAnchor, index);
-                        e.Handled = true;
-                        return;
-                    }
-                }
-                else if (KeyboardNavigationService.IsControlDown())
-                {
-                    entry.IsSelected = !entry.IsSelected;
-                    _selectionAnchor = index;
-                    e.Handled = true;
-                    return;
-                }
-
-                _selectionAnchor = index;
                 await ViewModel.CopyCommand.ExecuteAsync(entry);
             }
         }
@@ -796,27 +648,11 @@ public sealed partial class HistoryPanelWindow : Window
         }
     }
 
-    private void SelectRange(int anchor, int index)
-    {
-        if (anchor < 0 || index < 0)
-        {
-            return;
-        }
-
-        int start = Math.Min(anchor, index);
-        int end = Math.Max(anchor, index);
-        for (int i = start; i <= end && i < ViewModel.VisibleItems.Count; i++)
-        {
-            ViewModel.VisibleItems[i].IsSelected = true;
-        }
-    }
-
     private void CloseButton_Click(object sender, RoutedEventArgs e) => HidePanel();
 
     private void OpenSettings_Click(object sender, RoutedEventArgs e)
     {
         _settingsOpen = true;
-        _hideTimer?.Stop();
         ViewModel.Settings.BeginEdit();
 
         // InfoBar 的預設樣式在目前 WinUI 版本會缺少資源鍵，改用自訂提示列
@@ -863,9 +699,8 @@ public sealed partial class HistoryPanelWindow : Window
         SettingsPage.Visibility = Visibility.Collapsed;
         _settingsOpen = false;
 
-        // 設定可能改變「選取即貼上」與置頂，重算提示並套用視窗設定
+        // 設定可能改變「選取後不關閉」，重算底部提示
         ViewModel.RefreshRecordingState();
-        ApplyWindowPreferences();
         RootGrid.Focus(FocusState.Programmatic);
     }
 

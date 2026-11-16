@@ -26,7 +26,7 @@ public class SettingsServiceTests : IDisposable
         Assert.False(settings.AutoStart);
         Assert.Equal(DisplayMode.System, settings.DisplayMode);
         Assert.Equal(ThemeCatalog.DefaultThemeId, settings.ThemeId);
-        Assert.Equal(WindowCloseBehavior.Auto, settings.CloseBehavior);
+        Assert.False(settings.KeepPanelOpenAfterSelect);
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class SettingsServiceTests : IDisposable
             AutoStart = true,
             DisplayMode = DisplayMode.Dark,
             ThemeId = "forest-green",
-            CloseBehavior = WindowCloseBehavior.Manual,
+            KeepPanelOpenAfterSelect = true,
         });
 
         AppSettings loaded = service.Load();
@@ -48,7 +48,7 @@ public class SettingsServiceTests : IDisposable
         Assert.True(loaded.AutoStart);
         Assert.Equal(DisplayMode.Dark, loaded.DisplayMode);
         Assert.Equal("forest-green", loaded.ThemeId);
-        Assert.Equal(WindowCloseBehavior.Manual, loaded.CloseBehavior);
+        Assert.True(loaded.KeepPanelOpenAfterSelect);
     }
 
     [Fact]
@@ -59,8 +59,7 @@ public class SettingsServiceTests : IDisposable
               "MaxItems": 30,
               "AutoStart": false,
               "DisplayMode": 99,
-              "ThemeId": "not-a-theme",
-              "CloseBehavior": 99
+              "ThemeId": "not-a-theme"
             }
             """);
 
@@ -69,7 +68,25 @@ public class SettingsServiceTests : IDisposable
 
         Assert.Equal(DisplayMode.System, loaded.DisplayMode);
         Assert.Equal(ThemeCatalog.DefaultThemeId, loaded.ThemeId);
-        Assert.Equal(WindowCloseBehavior.Auto, loaded.CloseBehavior);
+    }
+
+    [Fact]
+    public void Load_舊版貼上與置頂欄位會被忽略()
+    {
+        File.WriteAllText(_settingsPath, """
+            {
+              "PasteOnSelect": false,
+              "AutoAppendEnter": true,
+              "AlwaysOnTop": true,
+              "CloseBehavior": "Manual"
+            }
+            """);
+
+        var service = new SettingsService(_settingsPath);
+        AppSettings loaded = service.Load();
+
+        Assert.False(loaded.KeepPanelOpenAfterSelect);
+        Assert.Equal(SettingsLoadStatus.Ok, service.LastLoadStatus);
     }
 
     [Fact]
@@ -81,7 +98,7 @@ public class SettingsServiceTests : IDisposable
             AutoStart = true,
             DisplayMode = DisplayMode.Light,
             ThemeId = "teal",
-            CloseBehavior = WindowCloseBehavior.Manual,
+            KeepPanelOpenAfterSelect = true,
         };
 
         AppSettings clone = settings.Clone();
@@ -90,7 +107,7 @@ public class SettingsServiceTests : IDisposable
         Assert.Equal(settings.AutoStart, clone.AutoStart);
         Assert.Equal(settings.DisplayMode, clone.DisplayMode);
         Assert.Equal(settings.ThemeId, clone.ThemeId);
-        Assert.Equal(settings.CloseBehavior, clone.CloseBehavior);
+        Assert.Equal(settings.KeepPanelOpenAfterSelect, clone.KeepPanelOpenAfterSelect);
     }
 
     [Fact]

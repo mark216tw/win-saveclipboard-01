@@ -22,7 +22,6 @@ public partial class App : Application
     private ClipboardRecordingState? _recordingState;
     private HotkeyService? _hotkey;
     private TrayIconService? _trayIcon;
-    private ForegroundWindowTracker? _foregroundTracker;
     private HistoryPersistenceCoordinator? _persistenceCoordinator;
     private HistoryPanelWindow? _panel;
 
@@ -192,8 +191,6 @@ public partial class App : Application
             _hotkey,
             recordingState,
             _persistenceCoordinator);
-        Action<string> showNotification = message =>
-            _trayIcon?.ShowBalloon("SaveClipboard", message, warning: true);
         Func<Windows.Graphics.RectInt32?> getTrayRect = () =>
         {
             if (_trayIcon is not null && _trayIcon.TryGetIconRect(out NativeMethods.RECT rect))
@@ -207,13 +204,9 @@ public partial class App : Application
 
             return null;
         };
-        _foregroundTracker = new ForegroundWindowTracker();
         _panel = new HistoryPanelWindow(
             viewModel,
             themeService,
-            lifetimeToken,
-            showNotification,
-            _foregroundTracker,
             getTrayRect,
             loggerFactory.CreateLogger<WindowPlacementService>(),
             loggerFactory.CreateLogger<HistoryPanelWindow>());
@@ -336,8 +329,6 @@ public partial class App : Application
         _hotkey = null;
         _clipboardListener?.Dispose();
         _clipboardListener = null;
-        _foregroundTracker?.Dispose();
-        _foregroundTracker = null;
         _helperWindow?.Dispose();
         _helperWindow = null;
         _host?.Dispose();

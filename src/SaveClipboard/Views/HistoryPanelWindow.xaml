@@ -80,7 +80,7 @@
                      TextChanged="SearchBox_TextChanged"
                      AutomationProperties.AutomationId="SearchBox"
                      AutomationProperties.Name="搜尋剪貼簿歷史"
-                     ToolTipService.ToolTip="輸入關鍵字過濾文字項目，按 ↓ 進入清單，Esc 清除" />
+                     ToolTipService.ToolTip="輸入關鍵字過濾文字項目，Esc 清除" />
             <Button x:Uid="SearchClearButton" Grid.Column="1" Click="ClearSearch_Click"
                     Padding="7" Background="Transparent" BorderThickness="0"
                     Visibility="{x:Bind ViewModel.SearchClearVisibility, Mode=OneWay}"
@@ -164,12 +164,13 @@
                 HorizontalAlignment="Left" VerticalAlignment="Bottom"
                 Margin="12,0,0,12" Padding="10,6"
                 CornerRadius="6" BorderThickness="1"
-                Background="{ThemeResource ToastBackgroundBrush}"
-                BorderBrush="{ThemeResource DividerBrush}"
+                Background="{ThemeResource AccentSubtleBrush}"
+                BorderBrush="{ThemeResource AccentBrush}"
                 IsHitTestVisible="False" Opacity="0" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <FontIcon Glyph="&#xE73E;" FontSize="12" Foreground="{ThemeResource AccentBrush}" />
-                <TextBlock x:Name="CopyToastText" Text="已複製" FontSize="12" VerticalAlignment="Center" />
+                <TextBlock x:Name="CopyToastText" Text="已複製" FontSize="12" VerticalAlignment="Center"
+                           Foreground="{ThemeResource AccentBrush}" />
             </StackPanel>
         </Border>
 
@@ -273,13 +274,9 @@
                         <TextBlock Text="啟動" Style="{StaticResource SectionHeaderTextStyle}" />
                         <CheckBox x:Uid="AutoStartCheckBox" Content="開機自動啟動"
                                   IsChecked="{x:Bind ViewModel.Settings.AutoStartDraft, Mode=TwoWay}" />
-                        <CheckBox x:Uid="AlwaysOnTopCheckBox" Content="面板置頂"
-                                  IsChecked="{x:Bind ViewModel.Settings.AlwaysOnTopDraft, Mode=TwoWay}" />
-                        <TextBlock x:Uid="AlwaysOnTopHint" Text="面板顯示時保持在其他視窗上方" Style="{StaticResource HintTextStyle}" />
-                        <CheckBox x:Uid="PasteOnSelectCheckBox" Content="選取後直接貼上"
-                                  IsChecked="{x:Bind ViewModel.Settings.PasteOnSelectDraft, Mode=TwoWay}"
-                                  AutomationProperties.Name="選取後直接貼上" />
-                        <TextBlock x:Uid="PasteOnSelectHint" Text="從清單點選或按 Enter 後，會自動切回前一個視窗並貼上。系統匣、桌面等無法貼上的視窗會略過。"
+                        <CheckBox x:Uid="KeepPanelOpenCheckBox" Content="選取後不關閉視窗"
+                                  IsChecked="{x:Bind ViewModel.Settings.KeepPanelOpenAfterSelectDraft, Mode=TwoWay}" />
+                        <TextBlock x:Uid="KeepPanelOpenHint" Text="複製項目後保持面板顯示，方便連續複製。"
                                    FontSize="11" Opacity="0.6" TextWrapping="Wrap" />
                     </StackPanel>
 
@@ -350,17 +347,6 @@
                                 <FontIcon Glyph="&#xE710;" FontSize="12" />
                             </Button>
                         </StackPanel>
-                    </StackPanel>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="主視窗關閉" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <TextBlock x:Uid="CloseBehaviorHint" Text="選手動時，需按主頁面右上角的 X 才會關閉" FontSize="11" Opacity="0.6" TextWrapping="Wrap" />
-                        <ComboBox x:Uid="CloseBehaviorCombo" HorizontalAlignment="Stretch"
-                                  SelectedIndex="{x:Bind ViewModel.Settings.CloseBehaviorIndex, Mode=TwoWay}"
-                                  AutomationProperties.Name="主視窗關閉方式">
-                            <ComboBoxItem x:Uid="CloseBehaviorAuto" Content="自動（失焦或 Esc 關閉）" />
-                            <ComboBoxItem x:Uid="CloseBehaviorManual" Content="手動（僅按 X 關閉）" />
-                        </ComboBox>
                     </StackPanel>
 
                     <StackPanel Spacing="4">

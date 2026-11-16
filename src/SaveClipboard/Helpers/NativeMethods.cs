@@ -22,13 +22,7 @@ internal static class NativeMethods
     public const uint MOD_CONTROL = 0x0002;
     public const uint MOD_NOREPEAT = 0x4000;
     public const uint VK_V = 0x56;
-    public const uint VK_CONTROL = 0x11;
-    public const uint KEYEVENTF_KEYUP = 0x0002;
     public const uint ASFW_ANY = 0xFFFFFFFF;
-
-    public const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
-    public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
-    public const uint WINEVENT_SKIPOWNPROCESS = 0x0002;
 
     public const uint WS_POPUP = 0x80000000;
     public const uint WS_EX_TOOLWINDOW = 0x00000080;
@@ -70,8 +64,6 @@ internal static class NativeMethods
     public const uint NIIF_INFO = 0x00000001;
     public const uint NIIF_WARNING = 0x00000002;
 
-    public const uint INPUT_KEYBOARD = 1;
-
     public const uint IMAGE_BITMAP = 0;
 
     public const uint MF_BYCOMMAND = 0x00000000;
@@ -79,15 +71,6 @@ internal static class NativeMethods
     public static readonly IntPtr HWND_MESSAGE = new(-3);
 
     public delegate nint WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-    public delegate void WinEventDelegate(
-        IntPtr hWinEventHook,
-        uint eventType,
-        IntPtr hwnd,
-        int idObject,
-        int idChild,
-        uint dwEventThread,
-        uint dwmsEventTime);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public sealed class WNDCLASSEXW
@@ -167,55 +150,6 @@ internal static class NativeMethods
         public IntPtr hWnd;
         public uint uID;
         public Guid guidItem;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct INPUT
-    {
-        public uint type;
-        public InputUnion U;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    public struct InputUnion
-    {
-        [FieldOffset(0)]
-        public MOUSEINPUT mi;
-
-        [FieldOffset(0)]
-        public KEYBDINPUT ki;
-
-        [FieldOffset(0)]
-        public HARDWAREINPUT hi;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MOUSEINPUT
-    {
-        public int dx;
-        public int dy;
-        public uint mouseData;
-        public uint dwFlags;
-        public uint time;
-        public IntPtr dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct KEYBDINPUT
-    {
-        public ushort wVk;
-        public ushort wScan;
-        public uint dwFlags;
-        public uint time;
-        public IntPtr dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct HARDWAREINPUT
-    {
-        public uint uMsg;
-        public ushort wParamL;
-        public ushort wParamH;
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -329,19 +263,6 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
 
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern IntPtr SetWinEventHook(
-        uint eventMin,
-        uint eventMax,
-        IntPtr hmodWinEventProc,
-        WinEventDelegate lpfnWinEventProc,
-        uint idProcess,
-        uint idThread,
-        uint dwFlags);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
-
     [DllImport("user32.dll")]
     public static extern bool AllowSetForegroundWindow(uint dwProcessId);
 
@@ -368,56 +289,6 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-    [DllImport("user32.dll")]
-    public static extern bool IsWindow(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    public static extern bool IsWindowVisible(IntPtr hWnd);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    public static extern int GetClassNameW(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern uint SendInput(uint nInputs, [In] INPUT[] pInputs, int cbSize);
-
-    /// <summary>
-    /// 以 SendInput 送出 Ctrl+V。呼叫端必須先確認目標視窗已取得前景；
-    /// 失敗時回傳 false 與 Win32 錯誤碼（例如 ERROR_ACCESS_DENIED 代表目標權限較高）。
-    /// </summary>
-    public static bool SendPasteShortcut(out int errorCode)
-    {
-        INPUT[] inputs =
-        [
-            CreateKeyboardInput(VK_CONTROL, 0),
-            CreateKeyboardInput(VK_V, 0),
-            CreateKeyboardInput(VK_V, KEYEVENTF_KEYUP),
-            CreateKeyboardInput(VK_CONTROL, KEYEVENTF_KEYUP),
-        ];
-
-        uint sent = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
-        if (sent == inputs.Length)
-        {
-            errorCode = 0;
-            return true;
-        }
-
-        errorCode = Marshal.GetLastWin32Error();
-        return false;
-    }
-
-    private static INPUT CreateKeyboardInput(uint virtualKey, uint flags) => new()
-    {
-        type = INPUT_KEYBOARD,
-        U = new InputUnion
-        {
-            ki = new KEYBDINPUT
-            {
-                wVk = (ushort)virtualKey,
-                dwFlags = flags,
-            },
-        },
-    };
 
     [DllImport("user32.dll")]
     public static extern IntPtr PostMessageW(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);

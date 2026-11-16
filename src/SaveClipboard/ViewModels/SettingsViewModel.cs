@@ -93,13 +93,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public partial int DisplayModeIndex { get; set; }
 
     [ObservableProperty]
-    public partial int CloseBehaviorIndex { get; set; }
-
-    [ObservableProperty]
-    public partial bool PasteOnSelectDraft { get; set; }
-
-    [ObservableProperty]
-    public partial bool AlwaysOnTopDraft { get; set; }
+    public partial bool KeepPanelOpenAfterSelectDraft { get; set; }
 
     [ObservableProperty]
     public partial bool PersistHistoryDraft { get; set; }
@@ -174,9 +168,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         MaxItemsDraft = AppSettings.DefaultMaxItems;
         AutoStartDraft = false;
         DisplayModeIndex = (int)DisplayMode.System;
-        CloseBehaviorIndex = (int)WindowCloseBehavior.Auto;
-        PasteOnSelectDraft = true;
-        AlwaysOnTopDraft = false;
+        KeepPanelOpenAfterSelectDraft = false;
         PersistHistoryDraft = false;
         _themeId = ThemeCatalog.DefaultThemeId;
         UpdateThemeSelection();
@@ -210,9 +202,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _settings.AutoStart = AutoStartDraft;
         _settings.DisplayMode = CurrentDisplayMode;
         _settings.ThemeId = _themeId;
-        _settings.CloseBehavior = IndexToCloseBehavior(CloseBehaviorIndex);
-        _settings.PasteOnSelect = PasteOnSelectDraft;
-        _settings.AlwaysOnTop = AlwaysOnTopDraft;
+        _settings.KeepPanelOpenAfterSelect = KeepPanelOpenAfterSelectDraft;
         _settings.PersistHistory = PersistHistoryDraft;
         _settings.Normalize();
 
@@ -313,9 +303,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         MaxItemsDraft = settings.MaxItems;
         AutoStartDraft = settings.AutoStart;
         DisplayModeIndex = (int)settings.DisplayMode;
-        CloseBehaviorIndex = (int)settings.CloseBehavior;
-        PasteOnSelectDraft = settings.PasteOnSelect;
-        AlwaysOnTopDraft = settings.AlwaysOnTop;
+        KeepPanelOpenAfterSelectDraft = settings.KeepPanelOpenAfterSelect;
         PersistHistoryDraft = settings.PersistHistory;
     }
 
@@ -349,7 +337,4 @@ public sealed partial class SettingsViewModel : ObservableObject
         2 => DisplayMode.Dark,
         _ => DisplayMode.System,
     };
-
-    private static WindowCloseBehavior IndexToCloseBehavior(int index) =>
-        index == 1 ? WindowCloseBehavior.Manual : WindowCloseBehavior.Auto;
 }

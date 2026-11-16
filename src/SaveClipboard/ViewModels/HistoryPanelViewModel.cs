@@ -64,13 +64,9 @@ public sealed partial class HistoryPanelViewModel : ObservableObject
 
     public SettingsViewModel Settings { get; }
 
-    public bool AutoHideEnabled => _settings.CloseBehavior == WindowCloseBehavior.Auto;
-
     public bool HasSelection => Items.Any(static item => item.IsSelected);
 
-    public bool PasteOnSelect => _settings.PasteOnSelect;
-
-    public bool AlwaysOnTop => _settings.AlwaysOnTop;
+    public bool KeepPanelOpenAfterSelect => _settings.KeepPanelOpenAfterSelect;
 
     public bool ShouldShowWelcome => !_settings.HasSeenWelcome;
 
@@ -120,9 +116,7 @@ public sealed partial class HistoryPanelViewModel : ObservableObject
                     : AppStrings.Get("Pause_Footer");
             }
 
-            return PasteOnSelect
-                ? $"{Settings.ShortcutText} · {AppStrings.Get("Footer_PasteOnSelectSuffix")}"
-                : Settings.ShortcutText;
+            return Settings.ShortcutText;
         }
     }
 
@@ -141,9 +135,6 @@ public sealed partial class HistoryPanelViewModel : ObservableObject
     public event Action? CloseRequested;
 
     public event Action<string>? CopyCompleted;
-
-    /// <summary>項目已成功寫入剪貼簿，供視窗決定是否貼回前一個視窗。</summary>
-    public event Action<ClipboardEntry>? ItemCopied;
 
     public void ResetSearch() => SearchText = string.Empty;
 
@@ -223,8 +214,7 @@ public sealed partial class HistoryPanelViewModel : ObservableObject
         }
 
         CopyCompleted?.Invoke(result.Message);
-        ItemCopied?.Invoke(entry);
-        if (PanelVisibilityRules.ShouldHideAfterCopy(AutoHideEnabled, AlwaysOnTop, PasteOnSelect))
+        if (!KeepPanelOpenAfterSelect)
         {
             CloseRequested?.Invoke();
         }
@@ -265,12 +255,6 @@ public sealed partial class HistoryPanelViewModel : ObservableObject
 
         deleted.Sort(static (left, right) => left.Index.CompareTo(right.Index));
         return deleted;
-    }
-
-    public DeletedClipboardEntry? DeleteEntry(ClipboardEntry entry)
-    {
-        int index = Items.IndexOf(entry);
-        return _history.Remove(entry.Id) ? new DeletedClipboardEntry(entry, index) : null;
     }
 
     public void RestoreDeleted(IEnumerable<DeletedClipboardEntry> deleted)

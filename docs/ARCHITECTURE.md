@@ -37,7 +37,7 @@ SaveClipboard 是單一處理序的常駐桌面程式，沒有傳統主視窗。
 │         │ 寫入剪貼簿                 │ Shell_NotifyIcon       │ TrayIcon    │  │
 │         │                          │ RegisterHotKey         │ Hotkey      │  │
 │  ┌──────┴───────┐           ┌──────┴───────┐                │ ...         │  │
-│  │ 系統剪貼簿     │◀──────────│ 寫入／貼上流程 │                └──────┬──────┘  │
+│  │ 系統剪貼簿     │◀──────────│ 寫入剪貼簿     │                └──────┬──────┘  │
 │  └──────────────┘           └──────────────┘                       │         │
 │                                     ▲                              │         │
 │                                     │ Binding／Command              │         │
@@ -56,7 +56,7 @@ SaveClipboard 是單一處理序的常駐桌面程式，沒有傳統主視窗。
    - 若為第一個實例：建立 `AppLifetime`、Host、服務與視窗。
 3. 建立 `HostApplicationBuilder`，註冊服務與 `AppSettings` 單例。
 4. 讀取設定；若啟用加密保存，載入 `history.dat`。
-5. 建立 `HelperWindow`、`HotkeyService`、`TrayIconService`、`ForegroundWindowTracker`。
+5. 建立 `HelperWindow`、`HotkeyService`、`TrayIconService`。
 6. 建立 `ClipboardWriterService`、`HistoryPanelViewModel`、`HistoryPanelWindow`、`ClipboardListenerService`。
 7. 依啟動方式顯示或隱藏面板：
    - 手動啟動：`ShowNearTray()`。
@@ -71,7 +71,7 @@ SaveClipboard 是單一處理序的常駐桌面程式，沒有傳統主視窗。
 3. `PersistBounds()` 保存面板位置與大小。
 4. 解除事件訂閱。
 5. `Flush()` 並 `Dispose()` 歷史保存協調器。
-6. 釋放系統匣、快捷鍵、剪貼簿監聽、前景追蹤器、輔助視窗、Host 與 lifetime。
+6. 釋放系統匣、快捷鍵、剪貼簿監聽、輔助視窗、Host 與 lifetime。
 7. `Application.Current.Exit()`。
 
 ## 3. 專案結構與命名空間
@@ -98,7 +98,6 @@ src/SaveClipboard/
     SettingsLoadStatus.cs         Ok／Missing／Recovered／Unavailable
     ThemeCatalog.cs               10 款主題
     ThemeOption.cs                主題定義
-    WindowCloseBehavior.cs        Auto／Manual
   Services/
     AppLifetime.cs                應用程式層級 CancellationTokenSource
     ClipboardCaptureQueue.cs      剪貼簿更新 FIFO 佇列與逾時
@@ -114,8 +113,6 @@ src/SaveClipboard/
     HistoryPersistenceCoordinator.cs  歷史保存排程
     HistoryPersistenceService.cs  DPAPI 加解密
     HotkeyService.cs              Ctrl+Alt+V
-    KeyboardNavigationService.cs  清單鍵盤導覽
-    PasteAutomationService.cs     前景切換與 Ctrl+V
     SettingsService.cs            設定檔讀寫與損毀復原
     StartupService.cs             HKCU Run 機碼
     ThemeService.cs               顯示模式與主題筆刷
@@ -131,12 +128,9 @@ src/SaveClipboard/
     ClipboardRetry.cs             剪貼簿忙碌重試
     DateTimeFormatConverter.cs
     DiagnosticLog.cs              崩潰日誌
-    ForegroundWindowTracker.cs    追蹤最後外部前景視窗
     HelperWindow.cs               隱藏訊息視窗
     ImageKindToVisibilityConverter.cs
     NativeMethods.cs              P/Invoke 與常數
-    PanelVisibilityRules.cs       面板顯示／隱藏規則
-    PasteTargetRules.cs           貼上目標判斷
     TextKindToVisibilityConverter.cs
   Styles/
     TextStyles.xaml               共用文字樣式
@@ -169,7 +163,6 @@ src/SaveClipboard/
 - `HelperWindow`
 - `HotkeyService`
 - `TrayIconService`
-- `ForegroundWindowTracker`
 - `ClipboardWriterService`
 - `ClipboardListenerService`
 - `HistoryPersistenceCoordinator`
@@ -225,7 +218,7 @@ sequenceDiagram
 
 1. 若 `ClipboardRecordingState.IsPaused`，直接略過。
 2. 讀取 `GetClipboardSequenceNumber()`。
-3. `ClipboardChangeGate.TryConsume(sequence)` 若命中，代表是本程式剛剛寫入剪貼簿造成的更新，略過。
+3. `ClipboardChangeGate.TryConsume(sequence)` 若落在本程式寫入前後的序號範圍內，代表是自我更新造成的內容，略過。
 4. 將序號加入 `ClipboardCaptureQueue`。
 
 ### 5.2 擷取佇列
@@ -317,7 +310,7 @@ Win32 後援由 `ClipboardFormatReader.TryReadUnicodeText` 實作，於背景執
 `HistoryPanelWindow` 是單一 WinUI `Window`，包含：
 
 - 主頁面：標題列、搜尋列、清單、空狀態、複製提示、復原提示、底部列。
-- 設定頁：覆蓋在主頁面上的 `Grid`，包含啟動、顯示模式、主題、歷史保存、保存上限、關閉方式、快捷鍵與關於。
+- 設定頁：覆蓋在主頁面上的 `Grid`，包含啟動、顯示模式、主題、歷史保存、保存上限、快捷鍵與關於。
 
 `HistoryPanelViewModel` 主要成員：
 
@@ -329,7 +322,6 @@ Win32 後援由 `ClipboardFormatReader.TryReadUnicodeText` 實作，於背景執
 | `HasSelection` | 是否有勾選項目 |
 | `RecordingPaused` / `PauseActionText` | 暫停狀態與按鈕文字 |
 | `StorageSummary` / `FooterHint` | 底部用量與提示 |
-| `ItemCopied` | 複製完成事件 |
 | `TogglePauseRecordingCommand` | 暫停／恢復 |
 | `PinSelected` / `DeleteSelected` | 批次操作 |
 
@@ -340,11 +332,11 @@ Win32 後援由 `ClipboardFormatReader.TryReadUnicodeText` 實作，於背景執
 `HistoryPanelWindow.xaml.cs` 負責 UI 事件，商業邏輯儘量委派給服務：
 
 - 搜尋文字變更 → ViewModel 過濾。
-- 清單點擊 → `ClipboardWriterService` + 可選 `PasteAutomationService`。
+- 清單點擊 → `ClipboardWriterService` 寫入剪貼簿。
 - 刪除／清除全部 → `DialogService` 二次確認。
-- 鍵盤 → `KeyboardNavigationService`。
+- `Esc` → 清除搜尋或關閉設定／面板。
 - 視窗移動／縮放 → `WindowPlacementService` 與設定保存。
-- 失焦 → 依 `PanelVisibilityRules` 決定是否隱藏。
+- 面板固定置頂且僅手動關閉，失焦不自動隱藏。
 
 ## 8. 執行緒模型
 
@@ -372,20 +364,12 @@ Win32 後援由 `ClipboardFormatReader.TryReadUnicodeText` 實作，於背景執
 
 面板尺寸以實體像素保存，`AppSettings.Normalize()` 只做粗略範圍檢查（200–2400），實際最小 320×400 DIP 由視窗依 `GetDpiForWindow` 強制。
 
-## 10. 自動貼上
+## 10. 複製流程
 
-流程由 `PasteAutomationService` 與 `HistoryPanelWindow` 協作：
-
-1. 開啟面板時記錄前一個外部前景視窗。
-2. `ForegroundWindowTracker` 以 `SetWinEventHook(EVENT_SYSTEM_FOREGROUND)` 持續記錄最後一個非本程式、非殼層的可見視窗。
-3. 使用者選取項目：
-   - `ClipboardWriterService` 寫入文字或圖片，並以 `ExpectOwnChange` 記錄剪貼簿序號。
-   - 若啟用「選取後直接貼上」，依 `AlwaysOnTop` 決定是否隱藏面板。
-   - 以 `AttachThreadInput` + `SetForegroundWindow` 切回目標視窗。
-   - 以 `SendInput` 送出 `Ctrl+V`。
-4. 若切換前景或送出輸入失敗，保留剪貼簿內容，透過系統匣氣泡提示「已複製，但無法自動貼上」。
-
-`PasteTargetRules` 排除本程式視窗、不可見視窗、`Shell_TrayWnd`、`Progman`、`WorkerW` 等殼層視窗。
+1. 使用者點擊清單項目。
+2. `ClipboardWriterService` 寫入文字或圖片，並以 `ExpectOwnChange` 記錄寫入前後序號範圍；歷史項目不重新加入、不更新 `CopiedAt`，也不改變排序。
+3. 成功後顯示套用主題色的「已複製」提示；依 `KeepPanelOpenAfterSelect` 決定是否收起面板。
+4. 程式不切換前景、不模擬輸入，使用者自行在目標視窗貼上。
 
 ## 11. 系統整合與 P/Invoke
 
@@ -397,8 +381,7 @@ Win32 後援由 `ClipboardFormatReader.TryReadUnicodeText` 實作，於背景執
 | 剪貼簿 | `AddClipboardFormatListener`、`RemoveClipboardFormatListener`、`GetClipboardSequenceNumber`、`OpenClipboard`、`GetClipboardData`、`GlobalLock` |
 | 系統匣 | `Shell_NotifyIconW`、`Shell_NotifyIconGetRect`、`CreatePopupMenu`、`TrackPopupMenu` |
 | 快捷鍵 | `RegisterHotKey`、`UnregisterHotKey` |
-| 前景 | `GetForegroundWindow`、`SetForegroundWindow`、`AttachThreadInput`、`AllowSetForegroundWindow`、`SetWinEventHook` |
-| 輸入 | `SendInput`（Ctrl+V） |
+| 前景 | `GetForegroundWindow`、`SetForegroundWindow`、`AttachThreadInput`、`AllowSetForegroundWindow` |
 | 螢幕／DPI | `MonitorFromRect`、`MonitorFromPoint`、`GetMonitorInfoW`、`GetDpiForMonitor`、`GetDpiForWindow` |
 | 圖示 | `LoadImageW`、`DestroyIcon` |
 
@@ -461,7 +444,7 @@ Win32 後援由 `ClipboardFormatReader.TryReadUnicodeText` 實作，於背景執
 
 - `DiagnosticsFileLoggerProvider`：有界 Channel + 背景批次寫入，避免 UI 執行緒被 I/O 阻塞。
 - `app.log` 超過 1 MB 時輪替為 `app.log.1`。
-- 日誌內容包含：剪貼簿序號、加入文字長度、加入圖片位元組數、略過原因、隱私標記、面板顯示／隱藏、貼上目標與錯誤。
+- 日誌內容包含：剪貼簿序號、加入文字長度、加入圖片位元組數、略過原因、隱私標記、面板顯示／隱藏與錯誤。
 - 日誌**不記錄**剪貼簿文字或圖片內容。
 - `crash.log` 由 `DiagnosticLog` 寫入，用於未處理例外，1 MB 上限。
 
@@ -481,7 +464,6 @@ Win32 後援由 `ClipboardFormatReader.TryReadUnicodeText` 實作，於背景執
 | `ClipboardRetryTests` | 忙碌重試判斷 |
 | `ClipboardSearchFilterTests` | 搜尋比對 |
 | `HistoryPersistenceServiceTests` | DPAPI 存取與損毀處理 |
-| `PanelVisibilityRulesTests` | 置頂／貼上／自動關閉組合 |
 | `SettingsServiceTests` | 載入狀態、損毀備份、安全寫入 |
 | `ThemeCatalogTests` | 主題清單與識別碼 |
 | `VisibleEntrySynchronizerTests` | 增量同步 |
@@ -514,5 +496,4 @@ E2E 腳本位於 `tools/`，以 PowerShell + UI Automation 驗證面板、複製
 - `GetClipboardSequenceNumber` 若回傳 0，`ClipboardChangeGate` 不會抑制更新，可能多收一筆重複，但不會漏記。
 - WinRT `GetTextAsync` 不支援取消權杖；逾時後原工作仍可能完成，程式會在完成後才加入歷史。
 - 圖片後援只支援 WinRT 路徑，Win32 後援只處理文字。
-- UIPI 會阻擋對高權限視窗的 `SendInput`。
 - 未提供程式碼簽章與 MSIX 安裝檔。

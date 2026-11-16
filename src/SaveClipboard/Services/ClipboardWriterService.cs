@@ -97,11 +97,13 @@ public sealed class ClipboardWriterService : IClipboardWriter
                 () =>
                 {
                     _lifetimeToken.ThrowIfCancellationRequested();
+                    uint startSequence = NativeMethods.GetClipboardSequenceNumber();
                     Clipboard.SetContent(package);
                     Clipboard.Flush();
+                    uint endSequence = NativeMethods.GetClipboardSequenceNumber();
 
                     // 序號在 SetContent 當下遞增，必須在設定完成後讀取才不會比對到舊值
-                    _changeGate.ExpectOwnChange(NativeMethods.GetClipboardSequenceNumber());
+                    _changeGate.ExpectOwnChange(startSequence, endSequence);
                     return Task.CompletedTask;
                 },
                 cancellationToken: _lifetimeToken).ConfigureAwait(true);

@@ -4,6 +4,113 @@
 
 ---
 
+## 2026-11-16 - v1.5.1
+
+### 目標
+從歷史項目複製時不改動原項目內容與順序，並讓「已複製文字／圖片」提示套用目前主題色。
+
+### 變更
+- `Services/ClipboardChangeGate.cs`：自我更新抑制改為寫入前後序號範圍（`ExpectOwnChange(start, end)`），範圍內可重複消費，範圍外與序號 0 不消費
+- `Services/ClipboardWriterService.cs`：`SetContent` 前後各讀一次 `GetClipboardSequenceNumber`，以範圍標記本程式寫入，避免同一筆寫入產生多次更新通知時再次加回、更新時間或移動原項目
+- `Views/HistoryPanelWindow.xaml`：`CopyToast` 改為淡主題底（`AccentSubtleBrush`）、主題色邊框與文字（`AccentBrush`）；`UndoToast` 維持中性配色
+- `tests/SaveClipboard.Tests/ClipboardChangeGateTests.cs`：改寫為序號範圍語意，新增範圍內重複消費、範圍外放行、序號 0 與 `Clear` 等案例
+- 版本 `1.5.1`（`AssemblyVersion` 維持 `1.5.0.0`）
+
+### 問題與解法
+- **複製後項目被更新**：同一筆自我寫入可能先後送出多次 `WM_CLIPBOARDUPDATE`，原本只記錄最後一個期待序號，較早的序號會落入擷取流程並經 `ClipboardHistoryService.Add` 重新加入、更新 `CopiedAt` 與排序；改以寫入前後範圍一次涵蓋，外部真正複製的序號仍在範圍外會正常記錄
+- **提示配色在深色模式可讀性**：沿用 `ThemeService` 依顯示模式產生的 `AccentBrush`／`AccentSubtleBrush`，不另外在 XAML 寫死顏色
+
+### 待辦／已知限制
+- 需實機確認從歷史連續複製文字與圖片後，清單順序與複製時間不變
+- 高對比模式沿用系統強調色，仍需人工確認提示文字可讀性
+
+---
+
+## 2026-11-16 - v1.5.0
+
+### 目標
+移除面板鍵盤導覽與自動貼上流程，讓點選項目只負責寫入剪貼簿；保留 `Esc`、全域快捷鍵與「選取後不關閉視窗」。
+
+### 變更
+- `Services/KeyboardNavigationService.cs`：刪除；`HistoryPanelWindow` 只保留 `Esc` 清除搜尋／關閉設定或面板
+- `Views/HistoryPanelWindow.xaml.cs`：移除 Shift／Ctrl 點擊多選、`Delete` 鍵刪除與焦點移動；點擊項目直接呼叫 `CopyCommand`
+- `Services/PasteAutomationService.cs`、`Helpers/ForegroundWindowTracker.cs`、`Helpers/PasteTargetRules.cs`、`Helpers/PasteTargetResolver.cs`：刪除
+- `Helpers/NativeMethods.cs`：移除 `SendInput`、`SendPasteShortcut`、`SendEnterKey`、`INPUT` 結構與前景事件 hook 等不再使用的互通宣告
+- `App.xaml.cs`：移除前景追蹤器與貼上提示回呼
+- `ViewModels/HistoryPanelViewModel.cs`：移除 `PasteOnSelect`、`AutoAppendEnter` 與 `ItemCopied`；保留 `KeepPanelOpenAfterSelect`
+- `Models/AppSettings.cs`、`ViewModels/SettingsViewModel.cs`：移除兩個貼上相關設定；舊設定檔欄位由 JSON 忽略
+- `Views/HistoryPanelWindow.xaml`、`Strings/zh-Hant`、`Strings/en-US`：移除兩個設定項目與貼上失敗字串，更新搜尋 ToolTip 與首次導引
+- 測試：更新 `AppSettingsTests`、`SettingsServiceTests`，刪除 `PasteTargetResolverTests`
+- 文件與版本：更新 `README.md`、`docs/USAGE.md`、`docs/DESIGN.md`、`docs/ARCHITECTURE.md`、`docs/PRIVACY.md`、`SECURITY.md`、`docs/BUILD.md`、`CHANGELOG.md`、`RELEASE_NOTES.md`；版本提升至 `1.5.0`（`AssemblyVersion`／`FileVersion` 1.5.0.0）
+
+### 問題與解法
+- **設定頁保留項目**：「選取後不關閉視窗」與自動貼上原本共用流程；移除貼上後仍保留此設定，`CopyAsync` 成功後只依它決定是否收起面板
+- **舊設定相容**：`PasteOnSelect`、`AutoAppendEnter` 不在 `AppSettings` 後，反序列化會忽略未知欄位，不需遷移
+- **鍵盤焦點行為**：移除自訂鍵盤處理後，清單不再攔截方向鍵與 `Enter`；`Esc` 改由視窗直接處理，避免依賴已刪除的服務
+
+### 待辦／已知限制
+- 需實機確認移除鍵盤導覽後，滑鼠點擊、勾選多選、釘選與刪除流程正常
+- 系統匣、工作列與 `Ctrl+Alt+V` 三種開啟方式仍需人工回歸
+
+---
+
+## 2026-11-16 - v1.4.9
+
+### 目標
+修正「選取後直接貼上」在面板已開啟時，無法辨識剛開啟的新視窗、改貼到前一個視窗的問題。
+
+### 變更
+- `Helpers/PasteTargetRules.cs`：新增 `IsTrackerCandidate`（不檢查 `IsWindowVisible`），可見性留到實際貼上前用 `IsValidTarget` 驗證
+- `Helpers/ForegroundWindowTracker.cs`：事件送達時改以 `GetForegroundWindow()` 取最新前景，只有殼層時才退回事件 hwnd；改用寬鬆候選規則；新增 `ForegroundChanged` 事件，值變更才觸發
+- `Helpers/PasteTargetResolver.cs`（新）：候選排序與有效性挑選抽成純函式
+- `Services/PasteAutomationService.cs`：訂閱 `ForegroundChanged` 即時更新目標；貼上目標改在隱藏面板前決定，隱藏後只作確認並以「預定目標 → 目前前景 → 追蹤值 → 記錄值」依序驗證；候選值寫入 Debug 日誌
+- `Views/HistoryPanelWindow.xaml.cs`：刻意隱藏面板期間不執行失焦目標更新，避免系統還原的視窗覆寫已決定的目標
+- `tests/SaveClipboard.Tests/PasteTargetResolverTests.cs`（新）：驗證候選排序、跳過無效值與零值、無候選時回傳零
+- `docs/DESIGN.md`：D-08 補充追蹤不檢查可見性的原因
+- 版本提升至 `1.4.9`（`AssemblyVersion` 維持 `1.4.0.0`、`FileVersion` 1.4.9.0）
+
+### 問題與解法
+- **新視窗被漏記**：`app.log` 顯示 `13:12:47` 失焦時抓到新視窗 `0x5770104`，但貼上時退回舊視窗 `0x724430`。根因是新視窗的 `EVENT_SYSTEM_FOREGROUND` 常在標記為可見前送達，追蹤器以 `IsWindowVisible` 判斷而丟棄，值停留在舊視窗
+- **隱藏面板才解析目標**：舊流程在隱藏後才解析，且以隱藏前的快照當備援；隱藏造成的失焦／系統還原視窗會蓋掉剛抓到的新視窗。改為隱藏前先決定目標，隱藏只作確認
+- **只靠失焦事件**：面板保持顯示時，只有 `Deactivated` 會更新目標，事件比前景切換早到就留下舊值；改由追蹤器事件即時同步
+
+### 待辦／已知限制
+- 需實機確認：面板開著 → 開新視窗 → 回面板點項目，會貼到新視窗
+- 若特定 App 的新視窗取得前景後立即關閉，仍可能退回舊視窗；可用 `app.log` 的「解析貼上目標」候選值判斷
+- 快捷鍵／系統匣／工作列三種叫出方式仍需人工回歸
+
+---
+
+## 2026-11-16 - v1.4.8
+
+### 目標
+移除面板置頂與主視窗關閉設定，面板固定置頂並僅能手動關閉；新增「自動附加 Enter 鍵」與「選取後不關閉視窗」，並整理啟動區選項順序。
+
+### 變更
+- `Models/AppSettings.cs`：移除 `CloseBehavior`、`AlwaysOnTop`，新增 `AutoAppendEnter`、`KeepPanelOpenAfterSelect`（皆預設 `false`）；同步 `Clone`／`CopyFrom`／`Normalize`
+- `Models/WindowCloseBehavior.cs`：刪除
+- `ViewModels/SettingsViewModel.cs`：移除關閉方式與置頂草稿，新增兩個選項草稿與儲存／重設流程
+- `Views/HistoryPanelWindow.xaml`：啟動區順序改為開機自動啟動、選取後直接貼上、自動附加 Enter 鍵、選取後不關閉視窗；移除置頂與主視窗關閉區塊
+- `Views/HistoryPanelWindow.xaml.cs`：`OverlappedPresenter.IsAlwaysOnTop` 固定為 `true`；移除失焦自動隱藏計時器與相關狀態；貼上流程改依 `KeepPanelOpenAfterSelect`
+- `Services/KeyboardNavigationService.cs`：`Esc` 在搜尋空白時關閉設定頁或面板，不再依關閉模式判斷
+- `Services/PasteAutomationService.cs`、`Helpers/NativeMethods.cs`：自動貼上成功後可選擇以 `SendInput` 追加 `Enter`；失敗時記錄並提示
+- `ViewModels/HistoryPanelViewModel.cs`：複製成功後依「選取後不關閉視窗」決定是否收起
+- `Helpers/PanelVisibilityRules.cs`、`tests/SaveClipboard.Tests/PanelVisibilityRulesTests.cs`：刪除，判斷已簡化為單一設定
+- `Strings/zh-Hant`、`Strings/en-US`：新增兩個選項與 Enter 失敗提示，移除置頂／關閉方式字串
+- 測試：更新 `AppSettingsTests`、`SettingsServiceTests`，驗證新欄位預設值、複製與設定檔往返
+- 文件與版本：更新 `README.md`、`docs/USAGE.md`、`docs/DESIGN.md`、`docs/ARCHITECTURE.md`、`docs/PRIVACY.md`、`docs/BUILD.md`、`CHANGELOG.md`、`RELEASE_NOTES.md`；版本提升至 `1.4.8`（`AssemblyVersion` 維持 `1.4.0.0`、`FileVersion` 1.4.8.0）
+
+### 問題與解法
+- **固定置頂後貼上目標切換**：面板仍在最上層，但不再依置頂狀態決定是否隱藏；改由「選取後不關閉視窗」控制，未勾選時先隱藏面板再貼回前一個視窗
+- **Esc 與僅手動關閉的衝突**：保留 `Esc` 作為手動關閉方式；有搜尋內容時先清除搜尋，再按一次才關閉
+- **舊設定相容**：舊版 `settings.json` 的 `CloseBehavior`／`AlwaysOnTop` 由 JSON 反序列化忽略，不需遷移
+
+### 待辦／已知限制
+- 需實機確認固定置頂下，自動貼上與追加 Enter 在不同權限視窗的行為
+- 設定頁新選項的鍵盤與 UIA 操作需人工驗證
+
+---
+
 ## 2026-11-16 - v1.4.7
 
 ### 目標

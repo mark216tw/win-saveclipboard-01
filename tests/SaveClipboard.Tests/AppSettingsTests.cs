@@ -6,9 +6,9 @@ namespace SaveClipboard.Tests;
 public class AppSettingsTests
 {
     [Fact]
-    public void 預設會啟用選取即貼上()
+    public void 選取後不關閉預設為關閉()
     {
-        Assert.True(new AppSettings().PasteOnSelect);
+        Assert.False(new AppSettings().KeepPanelOpenAfterSelect);
     }
 
     [Fact]
@@ -76,9 +76,7 @@ public class AppSettingsTests
             AutoStart = true,
             DisplayMode = DisplayMode.Dark,
             ThemeId = "forest-green",
-            CloseBehavior = WindowCloseBehavior.Manual,
-            PasteOnSelect = false,
-            AlwaysOnTop = true,
+            KeepPanelOpenAfterSelect = true,
             PersistHistory = true,
             HasSeenWelcome = true,
             HasPanelBounds = true,
@@ -88,7 +86,7 @@ public class AppSettingsTests
             PanelHeight = 480,
             PanelDpi = 144,
         };
-        var target = new AppSettings { ThemeId = "gold", PasteOnSelect = true };
+        var target = new AppSettings { ThemeId = "gold" };
 
         target.CopyFrom(source);
 
@@ -96,9 +94,7 @@ public class AppSettingsTests
         Assert.True(target.AutoStart);
         Assert.Equal(DisplayMode.Dark, target.DisplayMode);
         Assert.Equal("forest-green", target.ThemeId);
-        Assert.Equal(WindowCloseBehavior.Manual, target.CloseBehavior);
-        Assert.False(target.PasteOnSelect);
-        Assert.True(target.AlwaysOnTop);
+        Assert.True(target.KeepPanelOpenAfterSelect);
         Assert.True(target.PersistHistory);
         Assert.True(target.HasSeenWelcome);
         Assert.True(target.HasPanelBounds);
@@ -114,7 +110,7 @@ public class AppSettingsTests
     {
         var settings = new AppSettings
         {
-            PasteOnSelect = false,
+            KeepPanelOpenAfterSelect = true,
             HasPanelBounds = true,
             PanelLeft = 10,
             PanelTop = 20,
@@ -124,7 +120,7 @@ public class AppSettingsTests
 
         AppSettings clone = settings.Clone();
 
-        Assert.False(clone.PasteOnSelect);
+        Assert.True(clone.KeepPanelOpenAfterSelect);
         Assert.True(clone.HasPanelBounds);
         Assert.Equal(10, clone.PanelLeft);
         Assert.Equal(20, clone.PanelTop);

@@ -1,3 +1,56 @@
+# SaveClipboard 1.5.1 版本說明
+
+## 修正
+- 從歷史項目複製時不再改動原項目內容、複製時間或排序。
+- 「已複製文字／圖片」提示改為主題色樣式，會跟隨淺色／深色模式與目前主題。
+
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
+---
+
+# SaveClipboard 1.5.0 版本說明
+
+## 變更
+- 點選歷史項目後只會複製到剪貼簿，不再自動切回前一個視窗貼上。
+- 移除「選取後直接貼上」與「自動附加 Enter 鍵」設定；「選取後不關閉視窗」仍可決定複製後是否收起面板。
+- 移除面板內的鍵盤導覽與快捷操作（搜尋聚焦、全選、方向鍵移動、Enter 複製、Delete 刪除、Shift／Ctrl 多選）。
+- 保留 `Esc` 清除搜尋／關閉面板，以及全域快捷鍵 `Ctrl+Alt+V`。
+
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
+---
+
+# SaveClipboard 1.4.9 版本說明
+
+## 修正
+- 修正「選取後直接貼上」有時會貼到前一個視窗的問題；面板開著時新開啟或切換的視窗現在能被正確辨識。
+
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
+---
+
+# SaveClipboard 1.4.8 版本說明
+
+## 改進
+- 面板固定保持置頂，不再需要手動開啟「面板置頂」。
+- 面板改為僅手動關閉：點擊其他視窗不會再自動收起，按 X、`Esc` 或快捷鍵即可關閉。
+
+## 新功能
+- 「自動附加 Enter 鍵」：自動貼上成功後再送出 `Enter`。
+- 「選取後不關閉視窗」：選取項目後保持面板顯示，方便連續選取。
+
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
+---
+
 # SaveClipboard 1.4.7 版本說明
 
 ## 新功能

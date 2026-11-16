@@ -25,13 +25,8 @@ public sealed class AppSettings
 
     public string ThemeId { get; set; } = ThemeCatalog.DefaultThemeId;
 
-    public WindowCloseBehavior CloseBehavior { get; set; } = WindowCloseBehavior.Auto;
-
-    /// <summary>選取項目後直接貼上到開啟面板前的視窗。</summary>
-    public bool PasteOnSelect { get; set; } = true;
-
-    /// <summary>面板顯示時保持在其他視窗上方。</summary>
-    public bool AlwaysOnTop { get; set; }
+    /// <summary>選取項目後保持面板顯示，不自動關閉。</summary>
+    public bool KeepPanelOpenAfterSelect { get; set; }
 
     /// <summary>是否以 DPAPI 加密保存歷史到本機；預設只存在記憶體。</summary>
     public bool PersistHistory { get; set; }
@@ -59,9 +54,7 @@ public sealed class AppSettings
         AutoStart = AutoStart,
         DisplayMode = DisplayMode,
         ThemeId = ThemeId,
-        CloseBehavior = CloseBehavior,
-        PasteOnSelect = PasteOnSelect,
-        AlwaysOnTop = AlwaysOnTop,
+        KeepPanelOpenAfterSelect = KeepPanelOpenAfterSelect,
         PersistHistory = PersistHistory,
         HasSeenWelcome = HasSeenWelcome,
         HasPanelBounds = HasPanelBounds,
@@ -80,9 +73,7 @@ public sealed class AppSettings
         AutoStart = other.AutoStart;
         DisplayMode = other.DisplayMode;
         ThemeId = other.ThemeId;
-        CloseBehavior = other.CloseBehavior;
-        PasteOnSelect = other.PasteOnSelect;
-        AlwaysOnTop = other.AlwaysOnTop;
+        KeepPanelOpenAfterSelect = other.KeepPanelOpenAfterSelect;
         PersistHistory = other.PersistHistory;
         HasSeenWelcome = other.HasSeenWelcome;
         HasPanelBounds = other.HasPanelBounds;
@@ -100,11 +91,6 @@ public sealed class AppSettings
         if (!Enum.IsDefined(DisplayMode))
         {
             DisplayMode = DisplayMode.System;
-        }
-
-        if (!Enum.IsDefined(CloseBehavior))
-        {
-            CloseBehavior = WindowCloseBehavior.Auto;
         }
 
         if (!ThemeCatalog.Contains(ThemeId))
