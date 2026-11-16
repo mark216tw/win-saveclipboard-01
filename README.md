@@ -74,8 +74,8 @@ SaveClipboard 是一款常駐於 Windows 系統匣的剪貼簿歷史工具。它
 
 1. 前往 [Releases](https://github.com/mark216tw/win-saveclipboard-01/releases/latest)。
 2. 依裝置架構下載：
-   - `SaveClipboard-1.5.1-win-x64.zip`
-   - `SaveClipboard-1.5.1-win-arm64.zip`
+   - `SaveClipboard-1.5.2-win-x64.zip`
+   - `SaveClipboard-1.5.2-win-arm64.zip`
 3. 解壓縮到任一資料夾（例如 `C:\Apps\SaveClipboard`）。
 4. 執行 `SaveClipboard.exe`。
 5. 程式啟動後會常駐系統匣；按 `Ctrl+Alt+V` 或點系統匣圖示開啟面板。

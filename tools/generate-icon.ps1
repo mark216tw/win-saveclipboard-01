@@ -1,4 +1,4 @@
-# Generates the SaveClipboard app icon (transparent clipboard with a centered lightning bolt, forest green and white)
+# Generates the SaveClipboard app icon (full-bleed forest green background with a white clipboard and centered lightning bolt)
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File tools\generate-icon.ps1
 # Output: src\SaveClipboard\Assets\AppIcon.ico (16/24/32/48/64/128/256) and AppIcon-256.png
 
@@ -28,7 +28,7 @@ function DrawIcon([int]$size) {
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-    $g.Clear([System.Drawing.Color]::Transparent)
+    $g.Clear($Green)
 
     $s = $size / 256.0
     $greenBrush = New-Object System.Drawing.SolidBrush($Green)

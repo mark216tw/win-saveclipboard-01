@@ -1,3 +1,14 @@
+# SaveClipboard 1.5.2 版本說明
+
+## 變更
+- 應用程式圖示改為滿版森林綠背景，圖示在標題列、工作列與 Alt+Tab 中不再有透明邊框。
+
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
+---
+
 # SaveClipboard 1.5.1 版本說明
 
 ## 修正
