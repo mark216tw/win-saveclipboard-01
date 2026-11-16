@@ -4,6 +4,64 @@
 
 ---
 
+## 2026-11-16 - v1.4.6
+
+### 目標
+將 App 圖示改為透明底「剪貼簿＋置中閃電」，提升剪貼簿與快速叫回的辨識度，並兼顧淺色／深色工作列。
+
+### 變更
+- `tools/generate-icon.ps1`：改為透明背景、森林綠剪貼簿外框、白色紙面與夾子、置中綠色閃電；16/24 px 使用較寬的簡化閃電
+- `src/SaveClipboard/Assets/AppIcon.ico`、`AppIcon-256.png`：重新產生 16/24/32/48/64/128/256 px
+- `Directory.Build.props`：版本提升至 `1.4.6`（`AssemblyVersion` 維持 `1.4.0.0`、`FileVersion` 1.4.6.0）
+- `CHANGELOG.md`、`RELEASE_NOTES.md`：新增 1.4.6 紀錄
+
+### 問題與解法
+- **16px 閃電過細**：直接縮放後只剩 1–2px，中央取樣幾乎看不到；16/24 px 改用較寬的多邊形並略微放大，維持可辨識的鋸齒形狀
+- **透明底在淺色背景消失**：改採森林綠外框＋白色紙面的雙色結構，淺色靠綠框、深色靠白紙辨識
+
+### 驗證結果
+- `AppIcon-256.png`：四角透明；外框 `#2E6B3A`、紙面與夾子 `#FFFFFF`、閃電 `#2E6B3A`
+- `AppIcon.ico` 含 7 個尺寸（16、24、32、48、64、128、256 px）
+- 以像素分析確認 16px frame 保有剪貼簿輪廓與閃電；24px 以上加入夾子凹槽
+- 建置輸出的 PNG 與 exe 內嵌圖示取樣結果為新圖示；`FileVersion` 為 `1.4.6.0`
+- `dotnet build`：0 個警告 0 個錯誤
+- `dotnet test --no-build`：101/101 通過
+- `dotnet format --verify-no-changes --no-restore`：通過
+
+### 待辦
+- 實機檢視 16px 系統匣與工作列在淺色、深色、高對比模式下的效果
+- 既有 `artifacts/` 發佈檔未重新產生，需要時另行 publish
+
+---
+
+## 2026-11-16 - v1.4.5
+
+### 目標
+將 App 圖示底色由黃色改為森林綠，並重新產生所有尺寸的圖示資產。
+
+### 變更
+- `tools/generate-icon.ps1`：背景色改為 `#2E6B3A`（森林綠），更新註解
+- `src/SaveClipboard/Assets/AppIcon.ico`、`AppIcon-256.png`：重新產生 16/24/32/48/64/128/256 px
+- `Directory.Build.props`：版本提升至 `1.4.5`（`AssemblyVersion` 維持 `1.4.0.0`、`FileVersion` 1.4.5.0）
+- `CHANGELOG.md`、`RELEASE_NOTES.md`：新增 1.4.5 紀錄
+
+### 問題與解法
+- 無；沿用既有多尺寸產生腳本與 PNG 壓縮 ICO 流程
+
+### 驗證結果
+- `AppIcon-256.png` 底色取樣為 `#2E6B3A`、圓角外透明
+- `AppIcon.ico` 含 7 個尺寸（16、24、32、48、64、128、256 px）
+- 建置輸出的 PNG 與 exe 內嵌圖示取樣同為 `#2E6B3A`；`FileVersion` 為 `1.4.5.0`
+- `dotnet build`：0 個警告 0 個錯誤
+- `dotnet test --no-build`：101/101 通過
+- `dotnet format --verify-no-changes --no-restore`：通過
+
+### 待辦
+- 實機檢視淺色、深色與高對比工作列／系統匣顯示效果
+- 既有 `artifacts/` 發佈檔未重新產生，需要時另行 publish
+
+---
+
 ## 2026-11-16 - v1.4.4
 
 ### 目標

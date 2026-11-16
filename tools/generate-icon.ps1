@@ -1,4 +1,4 @@
-# Generates the SaveClipboard app icon (flat, yellow rounded-square background, two documents, simple lines)
+# Generates the SaveClipboard app icon (transparent clipboard with a centered lightning bolt, forest green and white)
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File tools\generate-icon.ps1
 # Output: src\SaveClipboard\Assets\AppIcon.ico (16/24/32/48/64/128/256) and AppIcon-256.png
 
@@ -9,11 +9,8 @@ $root = Split-Path -Parent $PSScriptRoot
 $assets = Join-Path $root 'src\SaveClipboard\Assets'
 New-Item -ItemType Directory -Force -Path $assets | Out-Null
 
-$BackgroundColor = [System.Drawing.Color]::FromArgb(255, 255, 193, 7)  # amber yellow
-$BackColor  = [System.Drawing.Color]::FromArgb(255, 91, 132, 181)   # slate blue
-$PaperColor = [System.Drawing.Color]::FromArgb(255, 255, 255, 255)  # white
-$LineColor  = [System.Drawing.Color]::FromArgb(255, 47, 75, 124)    # deep blue lines
-$Accent     = [System.Drawing.Color]::FromArgb(255, 242, 161, 4)    # amber title line
+$Green = [System.Drawing.Color]::FromArgb(255, 46, 107, 58)     # forest green
+$White = [System.Drawing.Color]::FromArgb(255, 255, 255, 255)  # paper and clip
 
 function New-RoundedRectPath([float]$x, [float]$y, [float]$w, [float]$h, [float]$r) {
     $path = New-Object System.Drawing.Drawing2D.GraphicsPath
@@ -30,44 +27,69 @@ function DrawIcon([int]$size) {
     $bmp = New-Object System.Drawing.Bitmap($size, $size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+    $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $g.Clear([System.Drawing.Color]::Transparent)
 
     $s = $size / 256.0
+    $greenBrush = New-Object System.Drawing.SolidBrush($Green)
+    $whiteBrush = New-Object System.Drawing.SolidBrush($White)
 
-    # yellow rounded-square background
-    $background = New-RoundedRectPath 0 0 $size $size (56 * $s)
-    $g.FillPath((New-Object System.Drawing.SolidBrush $BackgroundColor), $background)
-    $background.Dispose()
+    # clipboard body (forest green)
+    $body = New-RoundedRectPath (32 * $s) (24 * $s) (192 * $s) (208 * $s) (34 * $s)
+    $g.FillPath($greenBrush, $body)
+    $body.Dispose()
 
-    # back document (slate blue)
-    $back = New-RoundedRectPath (36 * $s) (64 * $s) (152 * $s) (158 * $s) (26 * $s)
-    $g.FillPath((New-Object System.Drawing.SolidBrush $BackColor), $back)
-    $back.Dispose()
+    # paper (white)
+    $paper = New-RoundedRectPath (50 * $s) (64 * $s) (156 * $s) (148 * $s) (20 * $s)
+    $g.FillPath($whiteBrush, $paper)
+    $paper.Dispose()
 
-    # front document (white, no folded corner)
-    $fx = 68 * $s; $fy = 28 * $s; $fw = 152 * $s; $fh = 176 * $s; $fr = 26 * $s
-    $front = New-RoundedRectPath $fx $fy $fw $fh $fr
-    $g.FillPath((New-Object System.Drawing.SolidBrush $PaperColor), $front)
-    $borderPen = New-Object System.Drawing.Pen($LineColor, [Math]::Max(1.0, 4 * $s))
-    $g.DrawPath($borderPen, $front)
-    $borderPen.Dispose()
-    $front.Dispose()
+    # clip (white)
+    $clip = New-RoundedRectPath (100 * $s) (34 * $s) (56 * $s) (32 * $s) (12 * $s)
+    $g.FillPath($whiteBrush, $clip)
+    $clip.Dispose()
 
-    # text lines: amber title line + two deep blue body lines
-    $lineX = $fx + 28 * $s
-    $lineH = [Math]::Max(2, [int](12 * $s))
-    $lines = @(
-        @{ y = 94;  w = 60;  color = $Accent },
-        @{ y = 132; w = 104; color = $LineColor },
-        @{ y = 166; w = 84;  color = $LineColor }
-    )
-    foreach ($line in $lines) {
-        $rectY = $line.y * $s
-        $path = New-RoundedRectPath $lineX $rectY ($line.w * $s) $lineH ($lineH / 2)
-        $g.FillPath((New-Object System.Drawing.SolidBrush $line.color), $path)
-        $path.Dispose()
+    # clip slot (skip at 16/24 px where it would blur)
+    if ($size -ge 32) {
+        $slot = New-RoundedRectPath (112 * $s) (43 * $s) (32 * $s) (8 * $s) (4 * $s)
+        $g.FillPath($greenBrush, $slot)
+        $slot.Dispose()
     }
 
+    # centered lightning bolt (wider shape at 16/24 px so the zigzag survives)
+    if ($size -le 24) {
+        $bolt = @(
+            @(150, 82),
+            @(98, 146),
+            @(122, 146),
+            @(104, 198),
+            @(158, 130),
+            @(134, 130)
+        )
+        $boltScale = if ($size -le 16) { 1.12 } else { 1.06 }
+    }
+    else {
+        $bolt = @(
+            @(146, 84),
+            @(106, 144),
+            @(124, 144),
+            @(112, 194),
+            @(152, 132),
+            @(134, 132)
+        )
+        $boltScale = 1.0
+    }
+    $cx = 128.0
+    $cy = 139.0
+    $points = foreach ($p in $bolt) {
+        $x = $cx + ($p[0] - $cx) * $boltScale
+        $y = $cy + ($p[1] - $cy) * $boltScale
+        New-Object System.Drawing.PointF(($x * $s), ($y * $s))
+    }
+    $g.FillPolygon($greenBrush, [System.Drawing.PointF[]]$points)
+
+    $greenBrush.Dispose()
+    $whiteBrush.Dispose()
     $g.Dispose()
     return $bmp
 }
