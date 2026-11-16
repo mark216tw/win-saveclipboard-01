@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-11-16 - v1.4.7
+
+### 目標
+面板是無邊框視窗，原本只能調整大小、無法移動。讓使用者可按住標題列拖曳移動，並確認位置與大小會被記住。
+
+### 變更
+- `Views/HistoryPanelWindow.xaml`：`HeaderBar` 加入 `PointerPressed`／`PointerMoved`／`PointerReleased`／`PointerCaptureLost`
+- `Views/HistoryPanelWindow.xaml.cs`：以指標螢幕座標計算位移並呼叫 `AppWindow.Move`；按在按鈕等互動控制項時不啟動拖曳；拖曳結束立即 `PersistBounds`
+- `Directory.Build.props`：版本提升至 `1.4.7`（`AssemblyVersion` 維持 `1.4.0.0`、`FileVersion` 1.4.7.0）
+- `CHANGELOG.md`、`RELEASE_NOTES.md`、`docs/USAGE.md`：補充移動面板操作說明
+- `README.md`、`docs/BUILD.md`：下載檔名與發佈範例版本更新為 1.4.7
+
+### 問題與解法
+- 無邊框視窗沒有系統標題列可拖曳，因此自行捕捉指標並換算螢幕像素位移；以 `RasterizationScale` 換算可跨 DPI 螢幕移動
+- 拖曳區含標題列內的按鈕時會誤觸移動，改以來源元素往上找 `ButtonBase` 等控制項排除
+- 原本只在隱藏面板或結束程式時保存位置，拖曳後直接結束程式可能遺失新位置，因此拖曳結束也保存一次（值未變時不寫檔）
+
+### 待辦
+- 實機確認多螢幕不同 DPI 的拖曳與還原行為
+- 觸控拖曳尚未實機驗證
+
+---
+
 ## 2026-11-16 - v1.4.6
 
 ### 目標

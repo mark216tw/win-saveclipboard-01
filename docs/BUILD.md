@@ -124,7 +124,7 @@ dotnet publish src\SaveClipboard `
 發佈輸出包含 `.pdb` 偵錯符號檔。Release 資產可選擇排除：
 
 ```powershell
-$version = "1.4.4"
+$version = "1.4.7"
 $root = "artifacts\publish"
 
 # x64
@@ -162,9 +162,9 @@ Assets\AppIcon-256.png
 版本設定位於 `Directory.Build.props`：
 
 ```xml
-<Version>1.4.4</Version>
+<Version>1.4.7</Version>
 <AssemblyVersion>1.4.0.0</AssemblyVersion>
-<FileVersion>1.4.4.0</FileVersion>
+<FileVersion>1.4.7.0</FileVersion>
 ```
 
 | 欄位 | 規則 |
@@ -195,10 +195,10 @@ Assets\AppIcon-256.png
 5. 建立 GitHub Release：
 
    ```powershell
-   gh release create v1.4.4 `
-     artifacts\SaveClipboard-1.4.4-win-x64.zip `
-     artifacts\SaveClipboard-1.4.4-win-arm64.zip `
-     --title "SaveClipboard 1.4.4" `
+   gh release create v1.4.7 `
+     artifacts\SaveClipboard-1.4.7-win-x64.zip `
+     artifacts\SaveClipboard-1.4.7-win-arm64.zip `
+     --title "SaveClipboard 1.4.7" `
      --notes-file RELEASE_NOTES.md
    ```
 

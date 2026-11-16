@@ -5,9 +5,11 @@ using Com.VibeCoding.SaveClipboard.Models;
 using Com.VibeCoding.SaveClipboard.Services;
 using Com.VibeCoding.SaveClipboard.ViewModels;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using WinRT.Interop;
@@ -32,6 +34,10 @@ public sealed partial class HistoryPanelWindow : Window
     private readonly PasteAutomationService _paste;
     private readonly DialogService _dialog;
     private readonly KeyboardNavigationService _keyboard;
+    private bool _isDraggingHeader;
+    private uint _dragPointerId;
+    private Windows.Foundation.Point _dragStartScreen;
+    private Windows.Graphics.PointInt32 _dragStartWindow;
     private bool _allowHide = true;
     private bool _settingsOpen;
     private bool _everActivated;
@@ -226,6 +232,88 @@ public sealed partial class HistoryPanelWindow : Window
         Windows.Graphics.PointInt32 position = AppWindow.Position;
         int dpi = (int)NativeMethods.GetDpiForWindow(WindowNative.GetWindowHandle(this));
         ViewModel.SavePanelBounds(position.X, position.Y, size.Width, size.Height, dpi);
+    }
+
+    /// <summary>標題列空白處按下：記錄起點並捕捉指標，開始拖曳移動視窗。</summary>
+    private void HeaderBar_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        PointerPoint point = e.GetCurrentPoint(HeaderBar);
+        if (!point.Properties.IsLeftButtonPressed
+            || IsInteractiveElement(e.OriginalSource as DependencyObject))
+        {
+            return;
+        }
+
+        _isDraggingHeader = true;
+        _dragPointerId = e.Pointer.PointerId;
+        _dragStartWindow = AppWindow.Position;
+        _dragStartScreen = GetPointerScreenPosition(e);
+        HeaderBar.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void HeaderBar_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingHeader || e.Pointer.PointerId != _dragPointerId)
+        {
+            return;
+        }
+
+        Windows.Foundation.Point current = GetPointerScreenPosition(e);
+        int left = _dragStartWindow.X + (int)Math.Round(current.X - _dragStartScreen.X);
+        int top = _dragStartWindow.Y + (int)Math.Round(current.Y - _dragStartScreen.Y);
+        AppWindow.Move(new Windows.Graphics.PointInt32(left, top));
+        e.Handled = true;
+    }
+
+    private void HeaderBar_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isDraggingHeader && e.Pointer.PointerId == _dragPointerId)
+        {
+            EndHeaderDrag();
+            e.Handled = true;
+        }
+    }
+
+    private void HeaderBar_PointerCaptureLost(object sender, PointerRoutedEventArgs e) => EndHeaderDrag();
+
+    private void EndHeaderDrag()
+    {
+        if (!_isDraggingHeader)
+        {
+            return;
+        }
+
+        _isDraggingHeader = false;
+        HeaderBar.ReleasePointerCaptures();
+
+        // 拖曳結束即保存，避免未隱藏面板就結束程式時遺失新位置
+        PersistBounds();
+    }
+
+    /// <summary>以 DIP 的指標位置換算成實體螢幕座標，跨 DPI 螢幕拖曳時仍能正確跟隨。</summary>
+    private Windows.Foundation.Point GetPointerScreenPosition(PointerRoutedEventArgs e)
+    {
+        Windows.Foundation.Point position = e.GetCurrentPoint(null).Position;
+        double scale = RootGrid.XamlRoot?.RasterizationScale ?? 1.0;
+        Windows.Graphics.PointInt32 origin = AppWindow.Position;
+        return new Windows.Foundation.Point(origin.X + (position.X * scale), origin.Y + (position.Y * scale));
+    }
+
+    /// <summary>按鈕等互動控制項要保留原本的點擊行為，不可當成拖曳區。</summary>
+    private static bool IsInteractiveElement(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is ButtonBase or TextBox or ComboBox or ToggleSwitch or ListView)
+            {
+                return true;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 
     private void OnCopyCompleted(string message)

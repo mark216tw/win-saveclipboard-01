@@ -30,7 +30,7 @@ SaveClipboard 是一款常駐於 Windows 系統匣的剪貼簿歷史工具。它
 - 點系統匣圖示、工作列釘選圖示，或按 `Ctrl+Alt+V` 開啟／收起面板。
 - 搜尋列即時過濾文字項目；`Ctrl+F` 聚焦搜尋，`Esc` 先清除搜尋再關閉。
 - 鍵盤操作：`↑`／`↓` 移動焦點、`Home`／`End`／`PageUp`／`PageDown` 快速移動、`Enter` 選取、`Delete` 刪除。
-- 面板可拖曳調整大小（最小 320×400 DIP），關閉或結束時保存位置與大小，下次啟動依螢幕與 DPI 驗證後還原。
+- 按住標題列空白處可拖曳移動面板，拖曳邊緣可調整大小（最小 320×400 DIP）；位置與大小會記住，下次啟動依螢幕與 DPI 驗證後還原。
 - 可設定面板置頂；可選擇「選取後直接貼上」。
 - 可設定主視窗關閉方式：自動（失焦或 `Esc`）或手動（僅按 X）。
 - 「暫停記錄 30 分鐘」可從系統匣選單或面板底部按鈕啟動，到期自動恢復。
@@ -75,8 +75,8 @@ SaveClipboard 是一款常駐於 Windows 系統匣的剪貼簿歷史工具。它
 
 1. 前往 [Releases](https://github.com/mark216tw/win-saveclipboard-01/releases/latest)。
 2. 依裝置架構下載：
-   - `SaveClipboard-1.4.4-win-x64.zip`
-   - `SaveClipboard-1.4.4-win-arm64.zip`
+   - `SaveClipboard-1.4.7-win-x64.zip`
+   - `SaveClipboard-1.4.7-win-arm64.zip`
 3. 解壓縮到任一資料夾（例如 `C:\Apps\SaveClipboard`）。
 4. 執行 `SaveClipboard.exe`。
 5. 程式啟動後會常駐系統匣；按 `Ctrl+Alt+V` 或點系統匣圖示開啟面板。

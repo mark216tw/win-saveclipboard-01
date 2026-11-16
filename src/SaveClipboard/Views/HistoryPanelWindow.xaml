@@ -27,9 +27,13 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- 標題列 -->
+        <!-- 標題列（空白處可按住拖曳移動視窗） -->
         <Grid x:Name="HeaderBar" Grid.Row="0" Padding="16,10,8,10" ColumnDefinitions="Auto,*,Auto"
-              Background="{ThemeResource TitleBarBrush}">
+              Background="{ThemeResource TitleBarBrush}"
+              PointerPressed="HeaderBar_PointerPressed"
+              PointerMoved="HeaderBar_PointerMoved"
+              PointerReleased="HeaderBar_PointerReleased"
+              PointerCaptureLost="HeaderBar_PointerCaptureLost">
             <Image Grid.Column="0" Source="ms-appx:///Assets/AppIcon-256.png" Width="34" Height="34" VerticalAlignment="Center" />
             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="3">
                 <TextBlock x:Uid="HistoryTitle" Text="剪貼簿歷史" FontSize="16" FontWeight="SemiBold" />
