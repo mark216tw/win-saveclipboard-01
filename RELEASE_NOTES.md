@@ -3,6 +3,10 @@
 ## 新功能
 - 面板可直接按住標題列空白處拖曳移動，位置與大小會被記住。
 
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
 ---
 
 # SaveClipboard 1.4.6 版本說明
