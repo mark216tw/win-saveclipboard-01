@@ -23,6 +23,7 @@ public partial class App : Application
     private HotkeyService? _hotkey;
     private TrayIconService? _trayIcon;
     private HistoryPersistenceCoordinator? _persistenceCoordinator;
+    private MemoryTrimService? _memoryTrim;
     private HistoryPanelWindow? _panel;
 
     public App()
@@ -102,8 +103,9 @@ public partial class App : Application
         _lifetime = new AppLifetime();
         CancellationToken lifetimeToken = _lifetime.Token;
 
-        HostApplicationBuilder builder = Host.CreateApplicationBuilder();
-        builder.Logging.ClearProviders();
+        // 使用 CreateEmptyApplicationBuilder 略過 appsettings.json 檔案監控、環境變數與預設主控台日誌，
+        // 加快啟動速度並減少常駐記憶體與 FileSystemWatcher 控制代碼。
+        HostApplicationBuilder builder = Host.CreateEmptyApplicationBuilder(settings: null);
         // 剪貼簿事件與成功收錄都需要進到檔案日誌，才能事後判斷漏記原因；
         // 框架本身的 Debug 訊息過多，限制在 Warning 以上。
         builder.Logging.SetMinimumLevel(LogLevel.Debug);
@@ -141,10 +143,10 @@ public partial class App : Application
         var historyPersistence = _host.Services.GetRequiredService<HistoryPersistenceService>();
         var loggerFactory = _host.Services.GetRequiredService<ILoggerFactory>();
 
-        if (settings.PersistHistory)
-        {
-            history.Restore(historyPersistence.Load());
-        }
+        // 持久化歷史移至背景執行緒非同步解密與反序列化，不阻塞系統匣、快捷鍵與視窗啟動。
+        Task<IReadOnlyList<Models.ClipboardEntry>>? pendingHistoryLoad = settings.PersistHistory
+            ? Task.Run(historyPersistence.Load, lifetimeToken)
+            : null;
 
         var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()
             ?? throw new InvalidOperationException("無法取得 UI 執行緒的 DispatcherQueue。");
@@ -153,10 +155,19 @@ public partial class App : Application
             historyPersistence,
             dispatcherQueue,
             settings.PersistHistory,
-            loggerFactory.CreateLogger<HistoryPersistenceCoordinator>());
+            loggerFactory.CreateLogger<HistoryPersistenceCoordinator>(),
+            initialLoadPending: pendingHistoryLoad is not null);
+
+        _memoryTrim = new MemoryTrimService(
+            lifetimeToken,
+            loggerFactory.CreateLogger<MemoryTrimService>());
 
         bool autoStarted = IsAutoStartLaunch();
-        MigrateAutoStartEntry(startupService);
+        (bool autoStartEnabled, bool hasAutoStartArg) = startupService.GetStatus();
+        if (autoStartEnabled && !hasAutoStartArg)
+        {
+            MigrateAutoStartEntry(startupService);
+        }
 
         _helperWindow = new HelperWindow();
         _helperWindow.MessageReceived += OnHelperMessage;
@@ -190,7 +201,8 @@ public partial class App : Application
             clipboardWriter,
             _hotkey,
             recordingState,
-            _persistenceCoordinator);
+            _persistenceCoordinator,
+            isAutoStartEnabled: autoStartEnabled);
         Func<Windows.Graphics.RectInt32?> getTrayRect = () =>
         {
             if (_trayIcon is not null && _trayIcon.TryGetIconRect(out NativeMethods.RECT rect))
@@ -207,6 +219,7 @@ public partial class App : Application
         _panel = new HistoryPanelWindow(
             viewModel,
             themeService,
+            _memoryTrim,
             getTrayRect,
             loggerFactory.CreateLogger<WindowPlacementService>(),
             loggerFactory.CreateLogger<HistoryPanelWindow>());
@@ -222,6 +235,16 @@ public partial class App : Application
 
         recordingState.StateChanged += OnRecordingStateChanged;
 
+        if (pendingHistoryLoad is not null)
+        {
+            _ = RestorePersistedHistoryAsync(
+                pendingHistoryLoad,
+                history,
+                _persistenceCoordinator,
+                dispatcherQueue,
+                lifetimeToken);
+        }
+
         if (autoStarted)
         {
             // 開機自動啟動：只常駐系統匣；WinUI 3 仍需至少一個已啟用的 XAML 視窗維持生命週期。
@@ -232,6 +255,48 @@ public partial class App : Application
             // 使用者手動啟動（例如第一次點擊工作列釘選圖示）：直接顯示主面板。
             _panel.ShowNearTray();
         }
+    }
+
+    private async Task RestorePersistedHistoryAsync(
+        Task<IReadOnlyList<Models.ClipboardEntry>> loadTask,
+        ClipboardHistoryService history,
+        HistoryPersistenceCoordinator coordinator,
+        Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Models.ClipboardEntry> entries;
+        try
+        {
+            entries = await loadTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Write(nameof(RestorePersistedHistoryAsync), ex);
+            entries = Array.Empty<Models.ClipboardEntry>();
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        dispatcherQueue.TryEnqueue(() =>
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            coordinator.CompleteInitialLoad(() => history.RestoreMissing(entries));
+            if (_panel is { IsPanelVisible: false })
+            {
+                _memoryTrim?.ScheduleTrim();
+            }
+        });
     }
 
     private static IntPtr WaitForHelperWindow(uint timeoutMs)
@@ -266,11 +331,6 @@ public partial class App : Application
 
     private static void MigrateAutoStartEntry(StartupService startupService)
     {
-        if (!startupService.IsEnabled() || startupService.HasAutoStartArgument())
-        {
-            return;
-        }
-
         try
         {
             // 舊版登錄值缺少 --autostart，補寫後下次開機才能保持隱藏。
@@ -319,6 +379,8 @@ public partial class App : Application
             _recordingState.StateChanged -= OnRecordingStateChanged;
         }
 
+        _memoryTrim?.Dispose();
+        _memoryTrim = null;
         _persistenceCoordinator?.Flush();
         _persistenceCoordinator?.Dispose();
         _persistenceCoordinator = null;

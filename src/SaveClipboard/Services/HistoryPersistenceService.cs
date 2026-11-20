@@ -12,12 +12,6 @@ namespace Com.VibeCoding.SaveClipboard.Services;
 /// </summary>
 public sealed class HistoryPersistenceService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = false,
-        Converters = { new JsonStringEnumConverter() },
-    };
-
     private readonly string _path;
     private readonly ILogger<HistoryPersistenceService> _logger;
 
@@ -48,14 +42,14 @@ public sealed class HistoryPersistenceService
         {
             byte[] encrypted = File.ReadAllBytes(_path);
             byte[] json = ProtectedData.Unprotect(encrypted, optionalEntropy: null, DataProtectionScope.CurrentUser);
-            PersistedFile? file = JsonSerializer.Deserialize<PersistedFile>(json, JsonOptions);
+            PersistedHistoryFile? file = JsonSerializer.Deserialize(json, HistoryPersistenceJsonContext.Default.PersistedHistoryFile);
             if (file?.Entries is null)
             {
                 return Array.Empty<ClipboardEntry>();
             }
 
             var entries = new List<ClipboardEntry>(file.Entries.Count);
-            foreach (PersistedEntry item in file.Entries)
+            foreach (PersistedHistoryEntry item in file.Entries)
             {
                 ClipboardEntry? entry = ToEntry(item);
                 if (entry is not null)
@@ -88,12 +82,12 @@ public sealed class HistoryPersistenceService
                 Directory.CreateDirectory(directory);
             }
 
-            var file = new PersistedFile
+            var file = new PersistedHistoryFile
             {
                 Entries = entries.Select(ToPersisted).ToList(),
             };
 
-            byte[] json = JsonSerializer.SerializeToUtf8Bytes(file, JsonOptions);
+            byte[] json = JsonSerializer.SerializeToUtf8Bytes(file, HistoryPersistenceJsonContext.Default.PersistedHistoryFile);
             byte[] encrypted = ProtectedData.Protect(json, optionalEntropy: null, DataProtectionScope.CurrentUser);
             File.WriteAllBytes(tempPath, encrypted);
             File.Move(tempPath, _path, overwrite: true);
@@ -125,27 +119,27 @@ public sealed class HistoryPersistenceService
         }
     }
 
-    private static PersistedEntry ToPersisted(ClipboardEntry entry) => new()
+    private static PersistedHistoryEntry ToPersisted(ClipboardEntry entry) => new()
     {
         Id = entry.Id,
         Kind = entry.Kind,
         Text = entry.Text,
-        ImageBase64 = entry.ImageBytes is null ? null : Convert.ToBase64String(entry.ImageBytes),
-        ThumbnailBase64 = entry.ThumbnailBytes is null ? null : Convert.ToBase64String(entry.ThumbnailBytes),
-        PixelHashBase64 = entry.ImagePixelHash is null ? null : Convert.ToBase64String(entry.ImagePixelHash),
+        ImageBase64 = entry.ImageBytes,
+        ThumbnailBase64 = entry.ThumbnailBytes,
+        PixelHashBase64 = entry.ImagePixelHash,
         Key = entry.Key,
         CopiedAt = entry.CopiedAt,
         IsPinned = entry.IsPinned,
     };
 
-    private static ClipboardEntry? ToEntry(PersistedEntry item)
+    private static ClipboardEntry? ToEntry(PersistedHistoryEntry item)
     {
         if (item.Kind == ClipboardEntryKind.Text && string.IsNullOrEmpty(item.Text))
         {
             return null;
         }
 
-        if (item.Kind == ClipboardEntryKind.Image && string.IsNullOrEmpty(item.ImageBase64))
+        if (item.Kind == ClipboardEntryKind.Image && item.ImageBase64 is not { Length: > 0 })
         {
             return null;
         }
@@ -155,17 +149,17 @@ public sealed class HistoryPersistenceService
             Id = item.Id == Guid.Empty ? Guid.NewGuid() : item.Id,
             Kind = item.Kind,
             Text = item.Text,
-            ImageBytes = Decode(item.ImageBase64),
-            ThumbnailBytes = Decode(item.ThumbnailBase64),
-            ImagePixelHash = Decode(item.PixelHashBase64),
+            ImageBytes = NonEmpty(item.ImageBase64),
+            ThumbnailBytes = NonEmpty(item.ThumbnailBase64),
+            ImagePixelHash = NonEmpty(item.PixelHashBase64),
             Key = item.Key,
             CopiedAt = item.CopiedAt,
             IsPinned = item.IsPinned,
         };
     }
 
-    private static byte[]? Decode(string? base64) =>
-        string.IsNullOrEmpty(base64) ? null : Convert.FromBase64String(base64);
+    private static byte[]? NonEmpty(byte[]? data) =>
+        data is { Length: > 0 } ? data : null;
 
     private static void TryDelete(string path)
     {
@@ -178,32 +172,38 @@ public sealed class HistoryPersistenceService
             // 清不掉暫存檔不影響主要錯誤
         }
     }
+}
 
-    private sealed class PersistedFile
-    {
-        public int Version { get; set; } = 1;
+internal sealed class PersistedHistoryFile
+{
+    public int Version { get; set; } = 1;
 
-        public List<PersistedEntry> Entries { get; set; } = [];
-    }
+    public List<PersistedHistoryEntry> Entries { get; set; } = [];
+}
 
-    private sealed class PersistedEntry
-    {
-        public Guid Id { get; set; }
+internal sealed class PersistedHistoryEntry
+{
+    public Guid Id { get; set; }
 
-        public ClipboardEntryKind Kind { get; set; }
+    public ClipboardEntryKind Kind { get; set; }
 
-        public string? Text { get; set; }
+    public string? Text { get; set; }
 
-        public string? ImageBase64 { get; set; }
+    public byte[]? ImageBase64 { get; set; }
 
-        public string? ThumbnailBase64 { get; set; }
+    public byte[]? ThumbnailBase64 { get; set; }
 
-        public string? PixelHashBase64 { get; set; }
+    public byte[]? PixelHashBase64 { get; set; }
 
-        public string Key { get; set; } = string.Empty;
+    public string Key { get; set; } = string.Empty;
 
-        public DateTimeOffset CopiedAt { get; set; }
+    public DateTimeOffset CopiedAt { get; set; }
 
-        public bool IsPinned { get; set; }
-    }
+    public bool IsPinned { get; set; }
+}
+
+[JsonSourceGenerationOptions(WriteIndented = false, UseStringEnumConverter = true)]
+[JsonSerializable(typeof(PersistedHistoryFile))]
+internal sealed partial class HistoryPersistenceJsonContext : JsonSerializerContext
+{
 }

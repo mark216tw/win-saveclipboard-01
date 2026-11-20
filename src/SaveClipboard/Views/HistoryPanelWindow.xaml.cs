@@ -27,12 +27,14 @@ public sealed partial class HistoryPanelWindow : Window
     private readonly ILogger<HistoryPanelWindow> _logger;
     private readonly WindowPlacementService _placement;
     private readonly DialogService _dialog;
+    private readonly MemoryTrimService _memoryTrim;
     private bool _isDraggingHeader;
     private uint _dragPointerId;
     private Windows.Foundation.Point _dragStartScreen;
     private Windows.Graphics.PointInt32 _dragStartWindow;
     private bool _allowHide = true;
     private bool _settingsOpen;
+    private SettingsView? _settingsView;
     private bool _enforcingMinimumSize;
     private bool _suppressSearchChange;
     private bool _isExiting;
@@ -47,11 +49,13 @@ public sealed partial class HistoryPanelWindow : Window
     public HistoryPanelWindow(
         HistoryPanelViewModel viewModel,
         ThemeService themeService,
+        MemoryTrimService memoryTrim,
         Func<Windows.Graphics.RectInt32?> getTrayRect,
         ILogger<WindowPlacementService> placementLogger,
         ILogger<HistoryPanelWindow> logger)
     {
         ViewModel = viewModel;
+        _memoryTrim = memoryTrim;
         _logger = logger;
         InitializeComponent();
         RootGrid.DataContext = viewModel;
@@ -83,11 +87,20 @@ public sealed partial class HistoryPanelWindow : Window
 
     public HistoryPanelViewModel ViewModel { get; }
 
+    public bool IsPanelVisible => AppWindow.IsVisible;
+
     public void ShowNearTray()
     {
+        _memoryTrim.CancelPending();
+
         IntPtr hwnd = WindowNative.GetWindowHandle(this);
         DateTimeOffset now = DateTimeOffset.UtcNow;
         bool wasVisible = AppWindow.IsVisible;
+
+        if (EntryList.ItemsSource is null)
+        {
+            EntryList.ItemsSource = ViewModel.VisibleItems;
+        }
 
         if (!wasVisible)
         {
@@ -152,6 +165,7 @@ public sealed partial class HistoryPanelWindow : Window
         _lastShowRequestAt = DateTimeOffset.UtcNow;
         Activate();
         AppWindow.Hide();
+        ReleaseResidentUiResources();
         _logger.LogInformation("開機啟動，面板保持隱藏");
     }
 
@@ -169,7 +183,16 @@ public sealed partial class HistoryPanelWindow : Window
         _foregroundTimer?.Stop();
 
         AppWindow.Hide();
+        ReleaseResidentUiResources();
         _logger.LogInformation("隱藏面板");
+    }
+
+    private void ReleaseResidentUiResources()
+    {
+        // 隱藏常駐時卸載清單容器與縮圖 BitmapImage 快取，並排程裁剪工作集
+        EntryList.ItemsSource = null;
+        BytesToImageSourceConverter.ClearCache();
+        _memoryTrim.ScheduleTrim();
     }
 
     /// <summary>把目前視窗位置與大小寫回設定檔；僅在隱藏或結束時呼叫。</summary>
@@ -652,15 +675,18 @@ public sealed partial class HistoryPanelWindow : Window
 
     private void OpenSettings_Click(object sender, RoutedEventArgs e)
     {
+        if (_settingsOpen)
+        {
+            return;
+        }
+
         _settingsOpen = true;
         ViewModel.Settings.BeginEdit();
 
-        // InfoBar 的預設樣式在目前 WinUI 版本會缺少資源鍵，改用自訂提示列
-        SettingsRecoveryBanner.Visibility = ViewModel.Settings.HasSettingsRecoveryNotice
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
-        SettingsPage.Visibility = Visibility.Visible;
+        var view = new SettingsView(ViewModel.Settings);
+        Grid.SetRowSpan(view, 4);
+        RootGrid.Children.Add(view);
+        _settingsView = view;
     }
 
     private async Task ShowWelcomeAsync()
@@ -696,26 +722,17 @@ public sealed partial class HistoryPanelWindow : Window
 
     private void OnSettingsEditCompleted()
     {
-        SettingsPage.Visibility = Visibility.Collapsed;
+        if (_settingsView is not null)
+        {
+            RootGrid.Children.Remove(_settingsView);
+            _settingsView = null;
+        }
+
         _settingsOpen = false;
 
         // 設定可能改變「選取後不關閉」，重算底部提示
         ViewModel.RefreshRecordingState();
         RootGrid.Focus(FocusState.Programmatic);
-    }
-
-    private void CloseSettings_Click(object sender, RoutedEventArgs e) =>
-        ViewModel.Settings.CloseCommand.Execute(null);
-
-    private void SaveSettings_Click(object sender, RoutedEventArgs e) =>
-        ViewModel.Settings.SaveCommand.Execute(null);
-
-    private void ThemeSwatch_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { Tag: string themeId })
-        {
-            ViewModel.Settings.SelectTheme(themeId);
-        }
     }
 
     private void PinSelected_Click(object sender, RoutedEventArgs e) => ViewModel.PinSelected();

@@ -27,14 +27,15 @@ public sealed partial class HistoryPanelViewModel : ObservableObject
         IClipboardWriter clipboardWriter,
         HotkeyService hotkeyService,
         ClipboardRecordingState recordingState,
-        HistoryPersistenceCoordinator persistenceCoordinator)
+        HistoryPersistenceCoordinator persistenceCoordinator,
+        bool? isAutoStartEnabled = null)
     {
         _history = history;
         _clipboardWriter = clipboardWriter;
         _settings = settings;
         _settingsService = settingsService;
         _recordingState = recordingState;
-        _settings.AutoStart = startupService.IsEnabled();
+        _settings.AutoStart = isAutoStartEnabled ?? startupService.IsEnabled();
 
         Settings = new SettingsViewModel(
             _settings,

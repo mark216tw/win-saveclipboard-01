@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.5] - 2026-11-20
+
+### 變更
+- 重新設計應用程式圖示：改為單一純白剪貼簿搭配暖金金屬夾扣與加粗內容條（適度放大並保留平衡邊距），背景更換為滿版紫羅蘭漸層以提升小尺寸辨識度；更新 `tools/AppIcon-1024.png` 並重新產生多尺寸 `AppIcon.ico`（16/24/32/48/64/128/256 px）與 `AppIcon-256.png`
+
+## [1.5.4] - 2026-11-20
+
+### 變更
+- 更換應用程式圖示為 Fluent 深色科技感「剪貼簿＋多層歷史卡片」設計；新增 1024×1024 原稿 `tools/AppIcon-1024.png`，並由 `tools/generate-icon.ps1` 重新產生完整多尺寸 `AppIcon.ico`（16/24/32/48/64/128/256 px）與 `AppIcon-256.png`
+
+## [1.5.3] - 2026-11-20
+
+### 改進
+- **啟動速度**：改用輕量 `Host.CreateEmptyApplicationBuilder`、JSON Source Generator、非同步背景載入加密歷史、動態延遲載入設定頁（`SettingsView`）、清單編譯式 `{x:Bind}`、單次登錄檔讀取、背景初始化日誌目錄與多語系字串快取
+- **常駐記憶體**：啟用低記憶體 GC 設定（`System.GC.ConserveMemory=7`、`RetainVM=false`）；面板隱藏時釋放清單容器與縮圖快取並於防抖後執行 LOH 壓縮與工作集裁剪（`MemoryTrimService`）；設定頁關閉即卸載視覺樹；圖片擷取重用單一解碼器並提前釋放原圖點陣圖
+
 ## [1.5.2] - 2026-11-16
 
 ### 變更

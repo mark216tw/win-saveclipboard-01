@@ -67,4 +67,54 @@ public class HistoryPersistenceServiceTests
             }
         }
     }
+
+    [Fact]
+    public void Load_相容舊版Base64字串格式的加密檔案()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "SaveClipboardTests", Guid.NewGuid().ToString("N"));
+        string path = Path.Combine(directory, "history.dat");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            string legacyJson = """
+                {
+                  "Version": 1,
+                  "Entries": [
+                    {
+                      "Id": "11111111-1111-1111-1111-111111111111",
+                      "Kind": "Image",
+                      "ImageBase64": "AQIDBA==",
+                      "ThumbnailBase64": "CQg=",
+                      "PixelHashBase64": "",
+                      "Key": "I:TEST",
+                      "CopiedAt": "2026-11-16T00:00:00+00:00",
+                      "IsPinned": true
+                    }
+                  ]
+                }
+                """;
+            byte[] encrypted = System.Security.Cryptography.ProtectedData.Protect(
+                Encoding.UTF8.GetBytes(legacyJson),
+                optionalEntropy: null,
+                System.Security.Cryptography.DataProtectionScope.CurrentUser);
+            File.WriteAllBytes(path, encrypted);
+
+            var service = new HistoryPersistenceService(path, NullLogger<HistoryPersistenceService>.Instance);
+            IReadOnlyList<ClipboardEntry> loaded = service.Load();
+
+            ClipboardEntry entry = Assert.Single(loaded);
+            Assert.Equal(ClipboardEntryKind.Image, entry.Kind);
+            Assert.Equal(new byte[] { 1, 2, 3, 4 }, entry.ImageBytes);
+            Assert.Equal(new byte[] { 9, 8 }, entry.ThumbnailBytes);
+            Assert.Null(entry.ImagePixelHash);
+            Assert.True(entry.IsPinned);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
 }

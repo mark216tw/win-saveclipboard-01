@@ -16,7 +16,13 @@
     <Description>Windows 剪貼簿歷史常駐工具：監聽剪貼簿（文字與圖片）、可設定保存上限、釘選常用項目。</Description>
     <Company>VibeCoding</Company>
     <Product>SaveClipboard</Product>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <RetainVMGarbageCollection>false</RetainVMGarbageCollection>
   </PropertyGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="7" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" />

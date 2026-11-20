@@ -6,12 +6,6 @@ namespace Com.VibeCoding.SaveClipboard.Services;
 
 public sealed class SettingsService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        Converters = { new JsonStringEnumConverter() },
-    };
-
     private readonly string _settingsPath;
 
     public SettingsService()
@@ -53,7 +47,7 @@ public sealed class SettingsService
 
         try
         {
-            AppSettings? settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
+            AppSettings? settings = JsonSerializer.Deserialize(json, SettingsJsonContext.Default.AppSettings);
             if (settings is null)
             {
                 return RecoverFromCorruptFile();
@@ -80,7 +74,7 @@ public sealed class SettingsService
             Directory.CreateDirectory(directory);
         }
 
-        string json = JsonSerializer.Serialize(settings, JsonOptions);
+        string json = JsonSerializer.Serialize(settings, SettingsJsonContext.Default.AppSettings);
         string tempPath = _settingsPath + ".tmp";
         try
         {
@@ -144,4 +138,10 @@ public sealed class SettingsService
             // 清不掉暫存檔不影響主要錯誤
         }
     }
+}
+
+[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
+[JsonSerializable(typeof(AppSettings))]
+internal sealed partial class SettingsJsonContext : JsonSerializerContext
+{
 }

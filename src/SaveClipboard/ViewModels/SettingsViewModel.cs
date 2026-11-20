@@ -110,11 +110,17 @@ public sealed partial class SettingsViewModel : ObservableObject
     public Visibility SaveErrorVisibility =>
         HasSaveError ? Visibility.Visible : Visibility.Collapsed;
 
+    public Visibility SettingsRecoveryBannerVisibility =>
+        HasSettingsRecoveryNotice ? Visibility.Visible : Visibility.Collapsed;
+
     public string SettingsRecoveryNoticeText => _settingsService.LastBackupPath is { } backupPath
         ? AppStrings.Format("SettingsRecovery_NoticeWithBackup", Path.GetFileName(backupPath))
         : AppStrings.Get("SettingsRecovery_Notice");
 
     partial void OnHasSaveErrorChanged(bool value) => OnPropertyChanged(nameof(SaveErrorVisibility));
+
+    partial void OnHasSettingsRecoveryNoticeChanged(bool value) =>
+        OnPropertyChanged(nameof(SettingsRecoveryBannerVisibility));
 
     public void BeginEdit()
     {

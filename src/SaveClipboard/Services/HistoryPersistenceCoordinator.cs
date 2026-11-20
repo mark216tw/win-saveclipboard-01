@@ -21,6 +21,9 @@ public sealed class HistoryPersistenceCoordinator : IDisposable
     private readonly DispatcherQueueTimer _timer;
     private readonly SemaphoreSlim _saveGate = new(1, 1);
     private bool _enabled;
+    private bool _initialLoadPending;
+    private bool _dirtyWhileLoading;
+    private bool _suppressSave;
     private bool _disposed;
 
     public HistoryPersistenceCoordinator(
@@ -28,12 +31,14 @@ public sealed class HistoryPersistenceCoordinator : IDisposable
         HistoryPersistenceService persistence,
         DispatcherQueue dispatcherQueue,
         bool enabled,
-        ILogger<HistoryPersistenceCoordinator> logger)
+        ILogger<HistoryPersistenceCoordinator> logger,
+        bool initialLoadPending = false)
     {
         _history = history;
         _persistence = persistence;
         _dispatcherQueue = dispatcherQueue;
         _enabled = enabled;
+        _initialLoadPending = enabled && initialLoadPending;
         _logger = logger;
 
         _timer = _dispatcherQueue.CreateTimer();
@@ -67,10 +72,41 @@ public sealed class HistoryPersistenceCoordinator : IDisposable
         }
     }
 
+    /// <summary>
+    /// 在非同步讀取持久化歷史完成後套用還原動作，過程中不觸發多餘回寫；
+    /// 若啟動期間已有新項目變動，還原後再排程寫入。
+    /// </summary>
+    public void CompleteInitialLoad(Action applyRestored)
+    {
+        ArgumentNullException.ThrowIfNull(applyRestored);
+
+        if (_disposed)
+        {
+            return;
+        }
+
+        _suppressSave = true;
+        try
+        {
+            applyRestored();
+        }
+        finally
+        {
+            _suppressSave = false;
+            _initialLoadPending = false;
+        }
+
+        if (_dirtyWhileLoading && _enabled)
+        {
+            _dirtyWhileLoading = false;
+            ScheduleSave(immediate: false);
+        }
+    }
+
     public void Flush()
     {
         _timer.Stop();
-        if (!_enabled)
+        if (!_enabled || _initialLoadPending)
         {
             return;
         }
@@ -135,8 +171,14 @@ public sealed class HistoryPersistenceCoordinator : IDisposable
 
     private void ScheduleSave(bool immediate)
     {
-        if (!_enabled || _disposed)
+        if (!_enabled || _disposed || _suppressSave)
         {
+            return;
+        }
+
+        if (_initialLoadPending)
+        {
+            _dirtyWhileLoading = true;
             return;
         }
 

@@ -404,13 +404,22 @@ public sealed class ClipboardListenerService : IDisposable
         cancellationToken.ThrowIfCancellationRequested();
         using InMemoryRandomAccessStream input = await CreateStreamAsync(raw);
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(input);
-        using SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
 
+        byte[] png;
+        int pixelWidth;
+        int pixelHeight;
+        using (SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync())
+        {
+            pixelWidth = softwareBitmap.PixelWidth;
+            pixelHeight = softwareBitmap.PixelHeight;
+            cancellationToken.ThrowIfCancellationRequested();
+            png = await EncodePngAsync(softwareBitmap);
+        }
+
+        // 重用同一個 decoder 縮放解碼，避免再次複製原始位元組串流與重建解碼器，
+        // 並在釋放原圖 SoftwareBitmap 後才建立縮圖以降低尖峰記憶體。
         cancellationToken.ThrowIfCancellationRequested();
-        byte[] png = await EncodePngAsync(softwareBitmap);
-        // 直接由原始資料縮放解碼，避免再把剛編碼好的 PNG 整張解一次
-        cancellationToken.ThrowIfCancellationRequested();
-        byte[] thumbnail = await CreateThumbnailPngAsync(raw, softwareBitmap.PixelWidth, softwareBitmap.PixelHeight);
+        byte[] thumbnail = await CreateThumbnailPngAsync(decoder, pixelWidth, pixelHeight);
         byte[] hash = ClipboardHistoryService.ComputePixelHash(png);
         return (png, thumbnail, hash);
     }
@@ -439,7 +448,7 @@ public sealed class ClipboardListenerService : IDisposable
         return await ReadAllBytesAsync(stream);
     }
 
-    private static async Task<byte[]> CreateThumbnailPngAsync(byte[] sourceBytes, int width, int height)
+    private static async Task<byte[]> CreateThumbnailPngAsync(BitmapDecoder decoder, int width, int height)
     {
         double scale = Math.Min(1.0, (double)ThumbnailWidth / Math.Max(1, width));
         var transform = new BitmapTransform
@@ -449,8 +458,6 @@ public sealed class ClipboardListenerService : IDisposable
             InterpolationMode = BitmapInterpolationMode.Fant,
         };
 
-        using InMemoryRandomAccessStream input = await CreateStreamAsync(sourceBytes);
-        BitmapDecoder decoder = await BitmapDecoder.CreateAsync(input);
         using SoftwareBitmap thumbnail = await decoder.GetSoftwareBitmapAsync(
             decoder.BitmapPixelFormat,
             decoder.BitmapAlphaMode,

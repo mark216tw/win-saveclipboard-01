@@ -21,22 +21,12 @@ public sealed class DiagnosticsFileLoggerProvider : ILoggerProvider
 
     public DiagnosticsFileLoggerProvider()
     {
-        try
-        {
-            Directory.CreateDirectory(DiagnosticLog.LogDirectory);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // 無法建立日誌目錄時，寫入階段會失敗並被忽略
-        }
-
-        _channel = Channel.CreateBounded<string>(new BoundedChannelOptions(2048)
+        _channel = Channel.CreateBounded<string>(new BoundedChannelOptions(256)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
             SingleReader = true,
             SingleWriter = false,
         });
-        _currentLength = GetCurrentLength();
         _writerTask = Task.Run(WriteLoopAsync);
     }
 
@@ -70,6 +60,17 @@ public sealed class DiagnosticsFileLoggerProvider : ILoggerProvider
 
     private async Task WriteLoopAsync()
     {
+        try
+        {
+            Directory.CreateDirectory(DiagnosticLog.LogDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // 無法建立日誌目錄時，寫入階段會失敗並被忽略
+        }
+
+        _currentLength = GetCurrentLength();
+
         var buffer = new StringBuilder();
         await foreach (string line in _channel.Reader.ReadAllAsync().ConfigureAwait(false))
         {

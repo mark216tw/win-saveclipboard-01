@@ -5,21 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:helpers="using:Com.VibeCoding.SaveClipboard.Helpers"
     xmlns:models="using:Com.VibeCoding.SaveClipboard.Models"
-    xmlns:viewmodels="using:Com.VibeCoding.SaveClipboard.ViewModels"
     Title="SaveClipboard">
 
     <Grid
         x:Name="RootGrid"
         Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
         PreviewKeyDown="RootGrid_KeyDown">
-        <Grid.Resources>
-            <helpers:BytesToImageSourceConverter x:Key="BytesToImageSourceConverter" />
-            <helpers:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
-            <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-            <helpers:ImageKindToVisibilityConverter x:Key="KindToImageVisibilityConverter" />
-            <helpers:TextKindToVisibilityConverter x:Key="KindToTextVisibilityConverter" />
-            <helpers:DateTimeFormatConverter x:Key="DateTimeFormatConverter" />
-        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -34,7 +25,11 @@
               PointerMoved="HeaderBar_PointerMoved"
               PointerReleased="HeaderBar_PointerReleased"
               PointerCaptureLost="HeaderBar_PointerCaptureLost">
-            <Image Grid.Column="0" Source="ms-appx:///Assets/AppIcon-256.png" Width="34" Height="34" VerticalAlignment="Center" />
+            <Image Grid.Column="0" Width="34" Height="34" VerticalAlignment="Center">
+                <Image.Source>
+                    <BitmapImage UriSource="ms-appx:///Assets/AppIcon-256.png" DecodePixelWidth="68" />
+                </Image.Source>
+            </Image>
             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="3">
                 <TextBlock x:Uid="HistoryTitle" Text="剪貼簿歷史" FontSize="16" FontWeight="SemiBold" />
                 <Border Height="2" Width="56" HorizontalAlignment="Left"
@@ -90,20 +85,19 @@
             </Button>
         </Grid>
 
-        <!-- 歷程清單 -->
+        <!-- 歷程清單（顯示時才綁定 ItemsSource，隱藏常駐時解除以釋放容器與縮圖記憶體） -->
         <ListView x:Name="EntryList" x:Uid="EntryList"
                   Grid.Row="2"
                   SelectionMode="None"
-                  ItemsSource="{Binding VisibleItems}"
                   AutomationProperties.Name="剪貼簿歷史清單">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="models:ClipboardEntry">
                     <Grid Padding="4" ColumnDefinitions="Auto,*" ColumnSpacing="4"
-                          AutomationProperties.Name="{Binding Preview}">
+                          AutomationProperties.Name="{x:Bind Preview}">
                         <CheckBox x:Uid="EntryCheckBox" Grid.Column="0" VerticalAlignment="Center"
                                   MinWidth="0" MinHeight="0" Padding="0" Margin="0"
                                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                  AutomationProperties.Name="{Binding Preview}"
+                                  AutomationProperties.Name="{x:Bind Preview}"
                                   AutomationProperties.HelpText="選取此項目" />
 
                         <Grid Grid.Column="1" ColumnDefinitions="40,*" ColumnSpacing="8"
@@ -113,21 +107,21 @@
                                     Background="{ThemeResource SubtleFillBrush}"
                                     HorizontalAlignment="Left" VerticalAlignment="Center">
                                 <Grid>
-                                    <Image Source="{Binding ThumbnailBytes, Converter={StaticResource BytesToImageSourceConverter}}"
+                                    <Image Source="{x:Bind helpers:BytesToImageSourceConverter.ConvertBytes(ThumbnailBytes)}"
                                            Stretch="Uniform" IsHitTestVisible="False"
-                                           Visibility="{Binding Kind, Converter={StaticResource KindToImageVisibilityConverter}}" />
+                                           Visibility="{x:Bind helpers:EntryDisplayHelper.ImageVisibility(Kind)}" />
                                     <TextBlock Text="Aa" FontWeight="SemiBold" FontSize="13"
                                                IsHitTestVisible="False"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Foreground="{ThemeResource AccentBrush}"
-                                               Visibility="{Binding Kind, Converter={StaticResource KindToTextVisibilityConverter}}" />
+                                               Visibility="{x:Bind helpers:EntryDisplayHelper.TextVisibility(Kind)}" />
 
                                     <!-- 釘選徽章：縮圖右下角 -->
                                     <Border x:Uid="PinnedBadge" Width="14" Height="14" CornerRadius="7"
                                             Margin="0,0,1,1"
                                             HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                             Background="{ThemeResource AccentBrush}"
-                                            Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Visibility="{x:Bind helpers:EntryDisplayHelper.BoolVisibility(IsPinned), Mode=OneWay}"
                                             AutomationProperties.Name="已釘選">
                                         <FontIcon Glyph="&#xE718;" FontSize="8" Foreground="White"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -137,10 +131,10 @@
 
                             <!-- 預覽 + 時間 -->
                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                                <TextBlock Text="{Binding Preview}" TextWrapping="Wrap" MaxLines="2"
+                                <TextBlock Text="{x:Bind Preview}" TextWrapping="Wrap" MaxLines="2"
                                            TextTrimming="CharacterEllipsis" FontSize="12" />
                                 <TextBlock FontSize="10" Opacity="0.6"
-                                           Text="{Binding CopiedAt, Converter={StaticResource DateTimeFormatConverter}}" />
+                                           Text="{x:Bind helpers:EntryDisplayHelper.FormatCopiedAt(CopiedAt), Mode=OneWay}" />
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -216,179 +210,6 @@
                     ToolTipService.ToolTip="清除所有歷史（含釘選）">
                 <FontIcon Glyph="&#xE74D;" FontSize="12" />
             </Button>
-        </Grid>
-
-        <!-- 設定頁（覆蓋主頁） -->
-        <Grid x:Name="SettingsPage" Grid.RowSpan="4" Visibility="Collapsed"
-              Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <Grid Grid.Row="0" Padding="16,12,8,12" ColumnDefinitions="*,Auto"
-                  Background="{ThemeResource TitleBarBrush}">
-                <TextBlock x:Uid="SettingsTitle" Text="設定" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <Button x:Uid="CloseSettingsButton" Grid.Column="1" Click="CloseSettings_Click" Padding="8"
-                        Background="Transparent" BorderThickness="0"
-                        AutomationProperties.Name="關閉設定"
-                        ToolTipService.ToolTip="關閉（不儲存）">
-                    <FontIcon Glyph="&#xE8BB;" FontSize="14" />
-                </Button>
-            </Grid>
-            <Border Grid.Row="0" Height="1" VerticalAlignment="Bottom" Background="{ThemeResource DividerBrush}" />
-
-            <ScrollViewer Grid.Row="1" Padding="16,12" VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="18">
-                    <Border x:Name="SettingsRecoveryBanner" Visibility="Collapsed"
-                            Background="{ThemeResource SubtleFillBrush}"
-                            BorderThickness="1" BorderBrush="{ThemeResource DividerBrush}"
-                            CornerRadius="6" Padding="10,8">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE7BA;" FontSize="14" VerticalAlignment="Top"
-                                      Foreground="{ThemeResource DangerBrush}" />
-                            <StackPanel Spacing="2">
-                                <TextBlock x:Uid="SettingsRecoveryTitle" Text="設定檔已還原為預設值" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                <TextBlock Text="{x:Bind ViewModel.Settings.SettingsRecoveryNoticeText}"
-                                           FontSize="11.5" Opacity="0.75" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="SettingsSaveErrorBanner"
-                            Visibility="{x:Bind ViewModel.Settings.SaveErrorVisibility, Mode=OneWay}"
-                            Background="{ThemeResource SubtleFillBrush}"
-                            BorderThickness="1" BorderBrush="{ThemeResource DangerBrush}"
-                            CornerRadius="6" Padding="10,8"
-                            AutomationProperties.LiveSetting="Assertive">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE7BA;" FontSize="14" VerticalAlignment="Top"
-                                      Foreground="{ThemeResource DangerBrush}" />
-                            <TextBlock Text="{x:Bind ViewModel.Settings.SaveErrorText, Mode=OneWay}"
-                                       FontSize="11.5" TextWrapping="Wrap" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="啟動" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <CheckBox x:Uid="AutoStartCheckBox" Content="開機自動啟動"
-                                  IsChecked="{x:Bind ViewModel.Settings.AutoStartDraft, Mode=TwoWay}" />
-                        <CheckBox x:Uid="KeepPanelOpenCheckBox" Content="選取後不關閉視窗"
-                                  IsChecked="{x:Bind ViewModel.Settings.KeepPanelOpenAfterSelectDraft, Mode=TwoWay}" />
-                        <TextBlock x:Uid="KeepPanelOpenHint" Text="複製項目後保持面板顯示，方便連續複製。"
-                                   FontSize="11" Opacity="0.6" TextWrapping="Wrap" />
-                    </StackPanel>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="顯示模式" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <ComboBox x:Uid="DisplayModeCombo" HorizontalAlignment="Stretch"
-                                  SelectedIndex="{x:Bind ViewModel.Settings.DisplayModeIndex, Mode=TwoWay}"
-                                  AutomationProperties.Name="顯示模式">
-                            <ComboBoxItem x:Uid="DisplayModeSystem" Content="跟隨系統" />
-                            <ComboBoxItem x:Uid="DisplayModeLight" Content="淺色" />
-                            <ComboBoxItem x:Uid="DisplayModeDark" Content="深色" />
-                        </ComboBox>
-                    </StackPanel>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="主題顏色" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <TextBlock x:Uid="ThemeColorsHint" Text="套用於主頁面的強調色" FontSize="11" Opacity="0.6" />
-                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.Settings.Themes}">
-                            <ItemsRepeater.Layout>
-                                <UniformGridLayout MinItemWidth="46" MinItemHeight="32"
-                                                   MinColumnSpacing="6" MinRowSpacing="6"
-                                                   MaximumRowsOrColumns="8" />
-                            </ItemsRepeater.Layout>
-                            <ItemsRepeater.ItemTemplate>
-                                <DataTemplate x:DataType="viewmodels:ThemeSwatchViewModel">
-                                    <Button Padding="0" MinWidth="0" MinHeight="0" Height="32"
-                                            HorizontalAlignment="Stretch"
-                                            Background="{x:Bind PreviewBrush}"
-                                            BorderThickness="2" BorderBrush="Transparent"
-                                            CornerRadius="6"
-                                            Tag="{x:Bind Id}"
-                                            Click="ThemeSwatch_Click"
-                                            AutomationProperties.Name="{x:Bind DisplayName}"
-                                            ToolTipService.ToolTip="{x:Bind DisplayName}">
-                                        <FontIcon Glyph="&#xE73E;" FontSize="13" Foreground="White"
-                                                  Visibility="{x:Bind SelectedVisibility, Mode=OneWay}" />
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsRepeater.ItemTemplate>
-                        </ItemsRepeater>
-                    </StackPanel>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock x:Uid="PersistHistoryTitle" Text="歷史保存" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <CheckBox x:Uid="PersistHistoryCheckBox" Content="保存歷史到本機（加密）"
-                                  IsChecked="{x:Bind ViewModel.Settings.PersistHistoryDraft, Mode=TwoWay}" />
-                        <TextBlock x:Uid="PersistHistoryHint" Text="使用 Windows DPAPI 加密，僅供目前使用者讀取；預設關閉。" Style="{StaticResource HintTextStyle}" />
-                    </StackPanel>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="保存上限" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <TextBlock x:Uid="MaxItemsHint" Text="只計算未釘選項目，範圍 10–50" FontSize="11" Opacity="0.6" />
-                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <Button x:Uid="DecreaseMaxItemsButton" Command="{x:Bind ViewModel.Settings.DecreaseMaxItemsCommand}"
-                                    Padding="6,2" MinWidth="32"
-                                    AutomationProperties.Name="減少上限"
-                                    ToolTipService.ToolTip="減少 10">
-                                <FontIcon Glyph="&#xE738;" FontSize="12" />
-                            </Button>
-                            <TextBlock x:Uid="MaxItemsValue" Text="{x:Bind ViewModel.Settings.MaxItemsDraft, Mode=OneWay}"
-                                       VerticalAlignment="Center" MinWidth="36" TextAlignment="Center"
-                                       FontSize="14" FontWeight="SemiBold"
-                                       AutomationProperties.Name="目前上限" />
-                            <Button x:Uid="IncreaseMaxItemsButton" Command="{x:Bind ViewModel.Settings.IncreaseMaxItemsCommand}"
-                                    Padding="6,2" MinWidth="32"
-                                    AutomationProperties.Name="增加上限"
-                                    ToolTipService.ToolTip="增加 10">
-                                <FontIcon Glyph="&#xE710;" FontSize="12" />
-                            </Button>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <StackPanel Spacing="4">
-                        <TextBlock x:Uid="ShortcutTitle" Text="全域快捷鍵" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <TextBlock FontSize="11.5" Opacity="0.65"
-                                   Text="{x:Bind ViewModel.Settings.ShortcutText}" />
-                        <TextBlock FontSize="11.5"
-                                   Foreground="{ThemeResource DangerBrush}"
-                                   TextWrapping="Wrap"
-                                   Text="{x:Bind ViewModel.Settings.ShortcutStatusText}"
-                                   Visibility="{x:Bind ViewModel.Settings.ShortcutWarningVisibility}" />
-                    </StackPanel>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock x:Uid="AboutTitle" Text="關於" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <TextBlock FontSize="12.5" FontWeight="SemiBold"
-                                   Text="{x:Bind ViewModel.Settings.AppName}" />
-                        <TextBlock FontSize="11.5" Opacity="0.7"
-                                   Text="{x:Bind ViewModel.Settings.VersionText}" />
-                        <TextBlock FontSize="11.5" Opacity="0.7"
-                                   Text="{x:Bind ViewModel.Settings.FileVersionText}" />
-                        <TextBlock x:Uid="AboutDescription" FontSize="11.5" Opacity="0.7" TextWrapping="Wrap"
-                                   Text="Windows 剪貼簿歷史常駐工具。剪貼簿內容預設只保存在記憶體；可在設定中選擇以 DPAPI 加密保存到本機。" />
-                        <TextBlock x:Uid="AboutLicense" FontSize="11.5" Opacity="0.7" TextWrapping="Wrap"
-                                   Text="授權：未指定" />
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Uid="OpenLogFolderButton" Content="開啟日誌資料夾"
-                                    Command="{x:Bind ViewModel.Settings.OpenLogFolderCommand}" />
-                            <Button x:Uid="ResetSettingsButton" Content="重設為預設值"
-                                    Command="{x:Bind ViewModel.Settings.ResetToDefaultsCommand}" />
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-
-            <Border Grid.Row="2" Height="1" VerticalAlignment="Top" Background="{ThemeResource DividerBrush}" />
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
-                        Spacing="8" Padding="16,10">
-                <Button x:Uid="SettingsCloseButton" Content="關閉" Click="CloseSettings_Click" MinWidth="72" />
-                <Button x:Uid="SettingsSaveButton" Content="儲存" Click="SaveSettings_Click" MinWidth="72"
-                        Style="{StaticResource AccentButtonStyle}" />
-            </StackPanel>
         </Grid>
     </Grid>
 </Window>

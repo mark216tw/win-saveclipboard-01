@@ -320,4 +320,47 @@ public class ClipboardHistoryServiceTests
         Assert.False(service.Restore(entry, 0));
         Assert.Single(service.Items);
     }
+
+    [Fact]
+    public void RestoreMissing_保留啟動期間新項目並補上未重複的持久化項目()
+    {
+        var service = CreateService();
+        service.AddText("captured-during-startup");
+
+        var persisted = new[]
+        {
+            new ClipboardEntry
+            {
+                Id = Guid.NewGuid(),
+                Kind = ClipboardEntryKind.Text,
+                Text = "captured-during-startup",
+                Key = ClipboardHistoryService.TextKey("captured-during-startup"),
+                CopiedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+            },
+            new ClipboardEntry
+            {
+                Id = Guid.NewGuid(),
+                Kind = ClipboardEntryKind.Text,
+                Text = "persisted-pinned",
+                Key = ClipboardHistoryService.TextKey("persisted-pinned"),
+                CopiedAt = DateTimeOffset.UtcNow.AddMinutes(-10),
+                IsPinned = true,
+            },
+            new ClipboardEntry
+            {
+                Id = Guid.NewGuid(),
+                Kind = ClipboardEntryKind.Text,
+                Text = "persisted-older",
+                Key = ClipboardHistoryService.TextKey("persisted-older"),
+                CopiedAt = DateTimeOffset.UtcNow.AddMinutes(-15),
+            },
+        };
+
+        service.RestoreMissing(persisted);
+
+        Assert.Equal(3, service.Items.Count);
+        Assert.Equal("persisted-pinned", service.Items[0].Text);
+        Assert.Equal("captured-during-startup", service.Items[1].Text);
+        Assert.Equal("persisted-older", service.Items[2].Text);
+    }
 }

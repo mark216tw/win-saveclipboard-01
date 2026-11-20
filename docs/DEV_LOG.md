@@ -4,6 +4,75 @@
 
 ---
 
+## 2026-11-20 - v1.5.5
+
+### 目標
+簡化應用程式圖示中的剪貼簿圖案（僅顯示單一剪貼簿、取消多層疊紙），調整為適中放大比例並更換為高對比滿版紫羅蘭漸層背景，提升小尺寸辨識度。
+
+### 變更
+- `tools/AppIcon-1024.png`：重製 1024×1024 正方形原稿，改為滿版紫羅蘭漸層背景、單一純白圓角剪貼簿主體（約佔畫布高度 75%，保留平衡邊距）、暖金金屬頂部夾扣與三條加粗橫向內容條（頂條紫羅蘭重點、下兩條冷灰）
+- `src/SaveClipboard/Assets/AppIcon.ico`、`AppIcon-256.png`：透過 `tools/generate-icon.ps1` 重新產生完整 7 種尺寸（16/24/32/48/64/128/256 px，32bpp PNG 內嵌），統一套用於執行檔、視窗、標題列、工作列、系統匣與 Alt+Tab
+- 版本提升至 `1.5.5`（`AssemblyVersion` 維持 `1.5.0.0`、`FileVersion` `1.5.5.0`），同步更新 `CHANGELOG.md` 與 `RELEASE_NOTES.md`
+
+### 問題與解法
+- 原 v1.5.4 圖示外圍留白較寬且包含三層疊紙，縮小至工作列與系統匣時主體偏小 → 改為單一剪貼簿並調整主體至約 75% 高度、移除外框與多餘圖層，搭配高對比紫羅蘭漸層滿版底色與暖金夾扣
+
+### 待辦／已知限制
+- 尚未於淺色、深色與高對比工作列實機檢視 16px 系統匣圖示的顯示效果
+
+---
+
+## 2026-11-20 - v1.5.4
+
+### 目標
+更換應用程式圖示為全新 Fluent 深色科技感「剪貼簿＋多層歷史卡片」設計，並從單一高解析度原稿建立完整多尺寸資產。
+
+### 變更
+- `tools/AppIcon-1024.png`（新）：1024×1024 高解析度正方形原稿（深灰漸層底含細邊框、深灰底板與三層灰白歷史卡片、亮青藍頂部夾扣與重點條）
+- `tools/generate-icon.ps1`：改由 `tools/AppIcon-1024.png` 以 HighQualityBicubic 縮放產生多尺寸 `.ico` 與 `AppIcon-256.png`
+- `src/SaveClipboard/Assets/AppIcon.ico`、`AppIcon-256.png`：重新產生完整 7 種尺寸（16/24/32/48/64/128/256 px，32bpp PNG 內嵌），統一套用於執行檔、視窗、標題列、工作列、系統匣與 Alt+Tab
+- 版本提升至 `1.5.4`（`AssemblyVersion` 維持 `1.5.0.0`、`FileVersion` `1.5.4.0`）
+
+### 問題與解法
+- 為避免 1024×1024 原稿被 `SaveClipboard.csproj` 的 `Assets\**\*.png` 規則一併複製進輸出目錄，原稿存放於 `tools/AppIcon-1024.png`，僅將產出資產放於 `src/SaveClipboard/Assets/`
+
+### 待辦／已知限制
+- 尚未實機檢視淺色、深色與高對比工作列上 16px 系統匣圖示的實際顯示效果
+
+---
+
+## 2026-11-20 - v1.5.3
+
+### 目標
+提高應用程式啟動速度並降低背景常駐時的記憶體使用量。
+
+### 變更
+- **啟動速度優化**
+  - `App.xaml.cs`：改用 `Host.CreateEmptyApplicationBuilder(settings: null)`，略過未使用的 `appsettings.json` 檔案監控（`FileSystemWatcher`）、環境變數與預設日誌提供者；持久化歷史改於背景執行緒非同步解密載入，完成後透過 `ClipboardHistoryService.RestoreMissing` 與 `HistoryPersistenceCoordinator.CompleteInitialLoad` 合併還原，不阻塞系統匣、快捷鍵與視窗啟動
+  - `Services/SettingsService.cs`、`Services/HistoryPersistenceService.cs`：改用 `System.Text.Json` Source Generator（`SettingsJsonContext`、`HistoryPersistenceJsonContext`）消除啟動期反射與動態程式碼產生；持久化圖片改以 `byte[]` 直接序列化為 Base64 JSON，消除中繼 Base64 字串的 LOH 配置並保持檔案格式相容
+  - `Views/SettingsView.xaml`／`.xaml.cs`（新）、`Views/HistoryPanelWindow.xaml`／`.xaml.cs`：將設定頁抽離為動態載入的 `SettingsView`，啟動時不建立設定頁視覺樹，關閉設定頁後立即從視覺樹移除；標題列圖示改設 `DecodePixelWidth="68"`；清單 `DataTemplate` 改用編譯式 `{x:Bind}` 與 `Helpers/EntryDisplayHelper.cs`（新）靜態函式繫結，移除 6 個資源轉換器實例與裝箱開銷
+  - `Services/DiagnosticsFileLoggerProvider.cs`：日誌目錄建立與檔案長度檢查移至背景寫入執行緒，通道容量自 2048 降為 256
+  - `Services/StartupService.cs`：新增 `GetStatus()` 單次讀取登錄檔，避免啟動時重複開啟登錄機碼
+  - `Helpers/AppStrings.cs`：快取已解析的多語系字串，避免重複跨 WinRT COM 查詢
+- **常駐記憶體優化**
+  - `SaveClipboard.csproj`：設定 `ServerGarbageCollection=false`、`RetainVMGarbageCollection=false`、`System.GC.ConserveMemory=7`
+  - `Views/HistoryPanelWindow.xaml.cs`、`Helpers/BytesToImageSourceConverter.cs`：面板隱藏（含 `--autostart`）時卸載 `EntryList.ItemsSource` 並呼叫 `BytesToImageSourceConverter.ClearCache()` 釋放清單容器與解碼縮圖；縮圖設定 `DecodePixelWidth=72` 並即時釋放串流包裝
+  - `Services/MemoryTrimService.cs`（新）、`Helpers/NativeMethods.cs`：面板隱藏進入常駐後以 1.5 秒防抖在背景執行 LOH 壓縮、GC 回收與 `SetProcessWorkingSetSize(-1, -1)` 裁剪工作集；面板重新顯示時立即取消待執行裁剪
+  - `Services/ClipboardListenerService.cs`：`ProcessImageAsync` 提前釋放原圖 `SoftwareBitmap` 並重用單一 `BitmapDecoder` 產生縮圖，避免重複複製原始位元組串流與建立第二個解碼器
+- **測試與版本**
+  - 新增 `tests/SaveClipboard.Tests/MemoryTrimServiceTests.cs`（5 個案例），於 `ClipboardHistoryServiceTests` 與 `HistoryPersistenceServiceTests` 補上非同步合併還原與舊版 Base64 字串格式相容測試（共 100 項測試全數通過）
+  - 版本提升至 `1.5.3`（`AssemblyVersion` 維持 `1.5.0.0`、`FileVersion` `1.5.3.0`）
+
+### 問題與解法
+- **`Window` 不支援 `x:Load="False"` 與 `DataTemplate` 內 `x:Bind` 轉換器**：WinUI 3 在 `Window` 內使用 `x:Load="False"` 或於 `DataTemplate` 的 `x:Bind` 使用 `Converter={StaticResource ...}` 時，產生的程式碼會將 `Window` 傳給期望 `FrameworkElement` 的 API（`CS1503`）→ 設定頁改抽成動態建立／移除的 `SettingsView`（`UserControl`），清單項目則改用編譯式 `{x:Bind}` 靜態函式繫結（`EntryDisplayHelper`、`BytesToImageSourceConverter.ConvertBytes`），同時省下轉換器裝箱與資源查找
+- **啟動非同步載入持久化歷史時若立刻結束可能覆寫檔案**：在 `HistoryPersistenceCoordinator` 加入 `initialLoadPending` 狀態，未完成初始載入前 `Flush()` 不覆寫既有 `history.dat`，且還原過程抑制多餘回寫
+
+### 待辦／已知限制
+- 建議於實機以工作管理員量測冷啟動時間與常駐（隱藏後約 2 秒）的私有工作集（Private Working Set）變化
+- 尚未於 ARM64 裝置與 Windows 10 1809 實機量測記憶體裁剪後重新喚出面板的延遲
+
+---
+
 ## 2026-11-16 - v1.5.2
 
 ### 目標

@@ -177,6 +177,37 @@ public sealed class ClipboardHistoryService
         Trim();
     }
 
+    /// <summary>
+    /// 非同步載入持久化歷史後合併至清單：保留啟動期間新擷取的項目，
+    /// 補上尚未存在的已保存項目並重排釘選順序與套用上限。
+    /// </summary>
+    public void RestoreMissing(IEnumerable<ClipboardEntry> entries)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+
+        var existingKeys = new HashSet<string>(Items.Count, StringComparer.Ordinal);
+        foreach (ClipboardEntry item in Items)
+        {
+            existingKeys.Add(item.Key);
+        }
+
+        bool addedAny = false;
+        foreach (ClipboardEntry entry in entries)
+        {
+            if (existingKeys.Add(entry.Key))
+            {
+                Items.Add(entry);
+                addedAny = true;
+            }
+        }
+
+        if (addedAny)
+        {
+            RepositionPinned();
+            Trim();
+        }
+    }
+
     /// <summary>把刪除的項目插回原本位置；相同內容已存在時略過。</summary>
     public bool Restore(ClipboardEntry entry, int index)
     {

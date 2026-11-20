@@ -272,6 +272,15 @@ internal static class NativeMethods
     [DllImport("kernel32.dll")]
     public static extern uint GetCurrentThreadId();
 
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr GetCurrentProcess();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool SetProcessWorkingSetSize(
+        IntPtr hProcess,
+        nint dwMinimumWorkingSetSize,
+        nint dwMaximumWorkingSetSize);
+
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
 

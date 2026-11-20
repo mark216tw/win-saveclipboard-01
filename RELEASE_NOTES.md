@@ -1,3 +1,37 @@
+# SaveClipboard 1.5.5 版本說明
+
+## 變更
+- 簡化應用程式圖示中的剪貼簿圖案（僅保留單一剪貼簿並調整為適中放大比例），背景更換為滿版紫羅蘭漸層搭配暖金金屬夾扣，讓工作列、標題列與系統匣中的圖示更清楚易辨。
+
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
+---
+
+# SaveClipboard 1.5.4 版本說明
+
+## 變更
+- 更換應用程式圖示為全新 Fluent 深色科技感「剪貼簿＋多層歷史卡片」設計，統一套用於執行檔、標題列、系統匣、工作列與 Alt+Tab。
+
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
+---
+
+# SaveClipboard 1.5.3 版本說明
+
+## 改進
+- **更快的啟動速度**：精簡啟動流程、將設定與加密歷史序列化改為編譯期產生、改以背景非同步載入持久化歷史，並延遲載入設定頁。
+- **更低的常駐記憶體**：面板收起常駐系統匣時自動釋放清單視覺樹與縮圖快取、於背景壓縮記憶體並裁剪工作集，同時降低圖片擷取與保存時的尖峰記憶體配置。
+
+## 注意
+- zip 不含 .NET 10 Desktop Runtime 與 Windows App SDK 1.8 Runtime，請先安裝對應 Runtime 再執行。
+- 本專案不提供安裝檔，下載後解壓縮直接執行 `SaveClipboard.exe`。
+
+---
+
 # SaveClipboard 1.5.2 版本說明
 
 ## 變更
